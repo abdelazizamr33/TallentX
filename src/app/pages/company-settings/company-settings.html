@@ -1,4 +1,4 @@
-﻿<div class="min-h-screen bg-surface-container-lowest p-6 md:p-8">
+<div class="min-h-screen bg-surface-container-lowest p-6 md:p-8">
   <div class="mx-auto max-w-6xl space-y-7">
     <header>
       <p class="text-label-md uppercase tracking-widest text-primary">Organization</p>
@@ -12,15 +12,15 @@
         <div class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
             <label class="text-label-sm text-on-surface">Company Name</label>
-            <input type="text" value="TallentX Labs" class="mt-1 w-full rounded-xl bg-surface-container px-4 py-2.5 text-on-surface outline-none ring-1 ring-outline-variant/40 focus:ring-2 focus:ring-primary" />
+            <input type="text" [value]="companyName()" readonly class="mt-1 w-full rounded-xl bg-surface-container px-4 py-2.5 text-on-surface outline-none ring-1 ring-outline-variant/40 opacity-70 cursor-not-allowed" />
           </div>
           <div>
             <label class="text-label-sm text-on-surface">Industry</label>
-            <input type="text" value="HR Technology" class="mt-1 w-full rounded-xl bg-surface-container px-4 py-2.5 text-on-surface outline-none ring-1 ring-outline-variant/40 focus:ring-2 focus:ring-primary" />
+            <input type="text" [value]="companyIndustry()" readonly class="mt-1 w-full rounded-xl bg-surface-container px-4 py-2.5 text-on-surface outline-none ring-1 ring-outline-variant/40 opacity-70 cursor-not-allowed" />
           </div>
           <div class="md:col-span-2">
             <label class="text-label-sm text-on-surface">Website</label>
-            <input type="text" value="https://tallentx.io" class="mt-1 w-full rounded-xl bg-surface-container px-4 py-2.5 text-on-surface outline-none ring-1 ring-outline-variant/40 focus:ring-2 focus:ring-primary" />
+            <input type="text" [value]="companyWebsite()" readonly class="mt-1 w-full rounded-xl bg-surface-container px-4 py-2.5 text-on-surface outline-none ring-1 ring-outline-variant/40 opacity-70 cursor-not-allowed" />
           </div>
         </div>
       </article>

@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, BehaviorSubject, of, forkJoin } from 'rxjs';
-import { map, tap, catchError, switchMap } from 'rxjs/operators';
-import { CandidateProfileDto, CandidateUIProfile, UpdateSkillsDto } from '../models/candidate.models';
+import { Observable, BehaviorSubject, of } from 'rxjs';
+import { map, tap, catchError } from 'rxjs/operators';
+import { CandidateProfileDto, CandidateUIProfile } from '../models/candidate.models';
 import { JobListDto, JobApplicationDto } from '../models/job.models';
 import { PagedResult } from '../models/common.models';
 import { environment } from '../../../environments/environment';
@@ -95,65 +95,18 @@ export class CandidateService {
   }
 
   updateSkills(skills: string[]): Observable<any> {
-    if (!skills || !Array.isArray(skills)) {
-      return of(null);
+    if (!skills || !Array.isArray(skills) || skills.length === 0) {
+      return of(null); // Validating non-empty array
     }
 
-    // 1. Fetch all available skills from the backend
-    return this.http.get<any[]>(`${environment.apiUrl}/Skills`).pipe(
-      catchError(() => of([])),
-      switchMap(availableSkills => {
-        const availableMap = new Map<string, number>();
-        availableSkills.forEach(s => availableMap.set(s.name.toLowerCase().trim(), s.id));
-
-        // 2. Identify which skills are new and need to be created
-        const newSkillNames = skills.filter(name => !availableMap.has(name.toLowerCase().trim()));
-        
-        const createObservables = newSkillNames.map(name => 
-          this.http.post<any>(`${environment.apiUrl}/Skills`, { name }).pipe(
-            catchError(() => of(null))
-          )
-        );
-
-        // 3. Create missing skills, then save them all to the candidate
-        const createJoin$ = createObservables.length > 0 ? forkJoin(createObservables) : of([]);
-
-        return createJoin$.pipe(
-          switchMap(newCreatedSkills => {
-            // Add newly created skills to our map
-            newCreatedSkills.forEach(s => {
-              if (s && s.id && s.name) {
-                availableMap.set(s.name.toLowerCase().trim(), s.id);
-              }
-            });
-
-            // Now build the DTO with valid IDs
-            const dtos = skills.map(name => {
-              const id = availableMap.get(name.toLowerCase().trim()) || 0;
-              return { id, name, level: 2 };
-            });
-
-            const skillIds = dtos.filter(d => d.id > 0).map(d => d.id);
-
-            // Send multiple formats to satisfy any potential backend DTO shape
-            const payload: any = {
-              skills: dtos,
-              skillNames: skills,
-              skillIds: skillIds
-            };
-
-            return this.http.put(`${this.base}/skills`, payload).pipe(
-              tap(() => {
-                const current = this.profileSubject.value;
-                if (current) {
-                  const updated = { ...current, skills };
-                  updated.completionPercentage = this.recalculateCompletion(updated);
-                  this.profileSubject.next(updated);
-                }
-              })
-            );
-          })
-        );
+    return this.http.put(`${this.base}/skills`, { skills }).pipe(
+      tap(() => {
+        const current = this.profileSubject.value;
+        if (current) {
+          const updated = { ...current, skills };
+          updated.completionPercentage = this.recalculateCompletion(updated);
+          this.profileSubject.next(updated);
+        }
       })
     );
   }

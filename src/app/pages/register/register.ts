@@ -1,11 +1,13 @@
-import { Component, inject } from '@angular/core';
+import { Component, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { NavigationEnd, Router, RouterModule } from '@angular/router';
+import { filter } from 'rxjs/operators';
 import { finalize } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
-import { RegisterRequest } from '../../core/models/auth.models';
+import { RegistrationUserType, RegisterRequest } from '../../core/models/auth.models';
 
 @Component({
   selector: 'app-register',
@@ -14,15 +16,20 @@ import { RegisterRequest } from '../../core/models/auth.models';
   templateUrl: './register.html',
   styleUrls: ['./register.css'],
 })
+
 export class Register {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
   private toast = inject(ToastService);
+  private destroyRef = inject(DestroyRef);
 
   registerForm: FormGroup;
   isLoading = false;
   showPassword = false;
+  /** Derived from URL: /register/recruiter vs /register, /register/candidate */
+  registrationUserType: RegistrationUserType = 'Candidate';
+  isRecruiterMode = false;
   errorMessage = '';
 
   constructor() {
@@ -31,8 +38,10 @@ export class Register {
       lastName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       phoneNumber: ['', Validators.required],
-      gender: ['Male', Validators.required],
       dateOfBirth: ['', Validators.required],
+      gender: ['Male', Validators.required],
+      companyId: [''],
+      inviteCode: [''],
       terms: [false, Validators.requiredTrue],
       password: [
         '',
@@ -43,9 +52,37 @@ export class Register {
         ]
       ]
     });
+
+    this.syncModeFromUrl();
+
+    this.router.events.pipe(
+      filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => this.syncModeFromUrl());
   }
 
   get f() { return this.registerForm.controls; }
+
+  private syncModeFromUrl(): void {
+    const path = this.router.url.split('?')[0].toLowerCase();
+    const recruiter = path.includes('/register/recruiter');
+    this.isRecruiterMode = recruiter;
+    this.registrationUserType = recruiter ? 'Recruiter' : 'Candidate';
+
+    const invite = this.registerForm.get('inviteCode');
+    if (recruiter) {
+      invite?.setValidators([
+        Validators.required,
+        Validators.minLength(6),
+        Validators.maxLength(12),
+        Validators.pattern('^[A-Za-z0-9]+$')
+      ]);
+    } else {
+      invite?.clearValidators();
+      invite?.setValue('', { emitEvent: false });
+    }
+    invite?.updateValueAndValidity({ emitEvent: false });
+  }
 
   togglePasswordVisibility() {
     this.showPassword = !this.showPassword;
@@ -63,16 +100,32 @@ export class Register {
     const v = this.registerForm.getRawValue();
     const dateOfBirth = this.toIsoDate(v.dateOfBirth as string);
 
-    return {
+    const body: RegisterRequest = {
       firstName: String(v.firstName ?? '').trim(),
       lastName: String(v.lastName ?? '').trim(),
       email: String(v.email ?? '').trim(),
       password: v.password as string,
       phoneNumber: String(v.phoneNumber ?? '').trim(),
-      gender: v.gender as 'Male' | 'Female' | 'Other',
+      gender: String(v.gender),
       dateOfBirth,
-      userType: 'Candidate'
+      userType: this.registrationUserType,
     };
+
+    if (this.registrationUserType === 'Recruiter') {
+      const raw = String(v.companyId ?? '').trim();
+      if (raw !== '') {
+        const n = Number(raw);
+        if (Number.isFinite(n) && n > 0) {
+          body.companyId = n;
+        }
+      }
+      const code = String(v.inviteCode ?? '').trim();
+      if (code !== '') {
+        body.inviteCode = code;
+      }
+    }
+
+    return body;
   }
 
   onSubmit() {
@@ -100,8 +153,8 @@ export class Register {
     ).subscribe({
       next: (res) => {
         if (res) {
-          this.toast.success('Registration successful! Welcome to TallentX.');
-          this.router.navigate(['/candidate/dashboard']);
+          this.toast.success(this.isRecruiterMode ? 'Recruiter account created successfully!' : 'Registration successful! Welcome to TallentX.');
+          this.router.navigate([this.isRecruiterMode ? '/recruiter/dashboard' : '/candidate/dashboard']);
         }
       },
       error: (err) => {

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { forkJoin, catchError, of } from 'rxjs';
@@ -28,6 +28,7 @@ export class DashboardPage implements OnInit {
   private candidateService = inject(CandidateService);
   private dashboardService = inject(DashboardService);
   private toastService = inject(ToastService);
+  private cdr = inject(ChangeDetectorRef);
 
   get aiMatchScore(): number {
     const completion = this.profile?.completionPercentage ?? 60;
@@ -49,28 +50,34 @@ export class DashboardPage implements OnInit {
   loadDashboardData(): void {
     this.isLoading = true;
     this.isError = false;
+    this.cdr.detectChanges(); // Force check to ensure isLoading=true is registered
 
     forkJoin({
       profile: this.candidateService.getProfile().pipe(catchError(() => of(null))),
       dashboard: this.dashboardService.getCandidateDashboard().pipe(catchError(() => of(null))),
       savedJobs: this.candidateService.getSavedJobs().pipe(catchError(() => of([])))
     }).subscribe(({ profile, dashboard, savedJobs }) => {
-      this.isLoading = false;
+      setTimeout(() => {
+        this.isLoading = false;
 
-      if (!profile || !dashboard) {
-        this.isError = true;
-        this.toastService.error('Failed to load dashboard data.');
-        return;
-      }
+        if (!profile || !dashboard) {
+          this.isError = true;
+          this.toastService.error('Failed to load dashboard data.');
+          this.cdr.detectChanges();
+          return;
+        }
 
-      this.profile = profile;
-      this.dashboard = dashboard;
-      this.applications = this.normalizeCollection<ApplicationModel>(dashboard.recentApplications);
-      this.savedJobs = this.normalizeCollection<JobModel>(savedJobs);
-      this.suggestedJobs = this.savedJobs.slice(0, 3).map(job => ({
-        ...job,
-        isSaved: true
-      }));
+        this.profile = profile;
+        this.dashboard = dashboard;
+        this.applications = this.normalizeCollection<ApplicationModel>(dashboard.recentApplications);
+        this.savedJobs = this.normalizeCollection<JobModel>(savedJobs);
+        this.suggestedJobs = this.savedJobs.slice(0, 3).map(job => ({
+          ...job,
+          isSaved: true
+        }));
+        
+        this.cdr.detectChanges(); // Ensure all state changes are safely propagated
+      }, 0);
     });
   }
 

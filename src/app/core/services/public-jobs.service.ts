@@ -3,8 +3,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
+import { ToastService } from './toast.service';
 import { JobCategory } from '../data/job-categories';
-import { PUBLIC_JOB_SEED, findSeedJobById } from '../data/public-jobs.seed';
 import { PublicJobDto, extractJobsFromApiResponse, normalizeApiJob } from '../utils/job.mapper';
 import { SearchFilters } from './job';
 
@@ -19,7 +19,7 @@ export interface PublicJobsPage {
   totalCount: number;
   pageNumber: number;
   pageSize: number;
-  source: 'api' | 'seed';
+  source: 'api';
 }
 
 function normalizeJobTypeFilter(value?: string): string | undefined {
@@ -37,90 +37,104 @@ function normalizeJobTypeFilter(value?: string): string | undefined {
   return map[value] ?? value;
 }
 
-function matchesFilters(job: PublicJobDto, filters: PublicJobsFilters): boolean {
-  const term = (filters.searchTerm || filters.keyword || '').trim().toLowerCase();
-  const location = (filters.location || '').trim().toLowerCase();
-  const jobType = normalizeJobTypeFilter(filters.jobType);
-
-  if (term) {
-    const haystack = [
-      job.title,
-      job.company?.name,
-      job.location,
-      job.description,
-      job.requirements,
-      ...(job.skills?.map((s) => s.name) ?? []),
-      job.category,
-    ]
-      .filter(Boolean)
-      .join(' ')
-      .toLowerCase();
-    if (!haystack.includes(term)) return false;
-  }
-
-  if (location) {
-    const loc = (job.location ?? '').toLowerCase();
-    const work = (job.workLocation ?? '').toLowerCase();
-    const wantsRemote = location === 'remote' || location.includes('remote');
-    if (wantsRemote) {
-      if (work === 'remote' || loc.includes('remote')) {
-        // matched
-      } else {
-        return false;
-      }
-    } else if (!loc.includes(location) && !work.includes(location)) {
-      return false;
-    }
-  }
-
-  if (jobType && job.jobType !== jobType) return false;
-
-  if (filters.category && job.category !== filters.category) return false;
-
-  if (filters.careerLevel && job.careerLevel !== filters.careerLevel) return false;
-
-  if (filters.workLocation && job.workLocation !== filters.workLocation) return false;
-
-  if (filters.salaryMin != null && job.salaryMax != null && job.salaryMax < filters.salaryMin) return false;
-  if (filters.salaryMax != null && job.salaryMin != null && job.salaryMin > filters.salaryMax) return false;
-
-  return true;
-}
-
-function paginate<T>(items: T[], pageNumber: number, pageSize: number): { slice: T[]; totalCount: number } {
-  const totalCount = items.length;
-  const start = (pageNumber - 1) * pageSize;
-  return { slice: items.slice(start, start + pageSize), totalCount };
-}
-
 @Injectable({ providedIn: 'root' })
 export class PublicJobsService {
   private http = inject(HttpClient);
+  private toast = inject(ToastService);
   private apiUrl = `${environment.apiUrl}/JobPosting`;
 
   getPublicJobs(filters: PublicJobsFilters = {}): Observable<PublicJobsPage> {
     const pageNumber = filters.pageNumber ?? 1;
     const pageSize = filters.pageSize ?? 12;
 
-    return this.fetchFromApi(filters).pipe(
-      map((apiJobs) => {
-        if (apiJobs.length > 0) {
-          const filtered = apiJobs.filter((j) => matchesFilters(j, filters));
-          const sorted = [...filtered].sort(
-            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          );
-          const { slice, totalCount } = paginate(sorted, pageNumber, pageSize);
-          return {
-            items: slice,
-            totalCount,
-            pageNumber,
-            pageSize,
-            source: 'api' as const,
-          };
+    const params = new HttpParams().set('pageNumber', '1').set('pageSize', '50'); // Safe max size
+    const term = (filters.searchTerm || filters.keyword || '').trim();
+    
+    // HACK: Re-adding the fallback bypass for the buggy empty GetAll to force jobs to show.
+    // Using 'a' because it's in almost every word, and using pageSize 50 to avoid 400 Bad Request limits.
+    const listUrl = term ? `${this.apiUrl}/search/${encodeURIComponent(term)}` : `${this.apiUrl}/search/a`;
+
+    return this.http.get<any>(listUrl, { params }).pipe(
+      map((body) => {
+        let list: any[] = [];
+        if (Array.isArray(body)) {
+          list = body;
+        } else if (body && typeof body === 'object') {
+          if (Array.isArray(body.items)) list = body.items;
+          else if (Array.isArray(body.data)) list = body.data;
+          else if (Array.isArray(body.results)) list = body.results;
+          else if (Array.isArray(body.jobPostings)) list = body.jobPostings;
+          else if (Array.isArray(body.$values)) list = body.$values;
+          else if (Array.isArray(body.value)) list = body.value;
+          else {
+            for (const key of Object.keys(body)) {
+              if (Array.isArray(body[key])) {
+                list = body[key];
+                break;
+              }
+            }
+          }
         }
-        return this.pageFromSeed(filters, pageNumber, pageSize);
+
+        let allJobs = list.map(normalizeApiJob).filter((j): j is PublicJobDto => j !== null);
+
+        // MANUAL FRONTEND FILTERING
+        if (filters.category) {
+          const cat = filters.category.toLowerCase();
+          allJobs = allJobs.filter(j => j.category?.toLowerCase().includes(cat) || j.title.toLowerCase().includes(cat));
+        }
+        if (filters.careerLevel) {
+          const lvl = filters.careerLevel.toLowerCase();
+          allJobs = allJobs.filter(j => j.careerLevel?.toLowerCase().includes(lvl));
+        }
+        if (filters.workLocation) {
+          const wl = filters.workLocation.toLowerCase();
+          allJobs = allJobs.filter(j => j.location?.toLowerCase().includes(wl) || j.workLocation?.toLowerCase().includes(wl));
+        }
+        if (filters.jobType) {
+          const jt = normalizeJobTypeFilter(filters.jobType)?.toLowerCase();
+          if (jt) {
+            allJobs = allJobs.filter(j => j.jobType?.toLowerCase().includes(jt));
+          }
+        }
+        if (filters.salaryMin != null) {
+          allJobs = allJobs.filter(j => (j.salaryMin ?? 0) >= filters.salaryMin!);
+        }
+        if (filters.salaryMax != null) {
+          allJobs = allJobs.filter(j => (j.salaryMax ?? 9999999) <= filters.salaryMax!);
+        }
+
+        const totalCount = allJobs.length;
+        const startIndex = (pageNumber - 1) * pageSize;
+        const pagedItems = allJobs.slice(startIndex, startIndex + pageSize);
+
+        return {
+          items: pagedItems,
+          totalCount,
+          pageNumber,
+          pageSize,
+          source: 'api' as const,
+        };
       }),
-      catchError(() => of(this.pageFromSeed(filters, pageNumber, pageSize)))
+      catchError((error) => {
+        console.error('[PublicJobsService] Error fetching jobs:', error);
+        
+        if (error.status === 401) {
+           this.toast.error('You must be logged in to view jobs.');
+        } else if (error.status === 403) {
+           this.toast.error('You do not have permission to view jobs.');
+        } else {
+           this.toast.error('Failed to load jobs from the server.');
+        }
+
+        return of({
+          items: [],
+          totalCount: 0,
+          pageNumber,
+          pageSize,
+          source: 'api' as const,
+        });
+      })
     );
   }
 
@@ -132,9 +146,9 @@ export class PublicJobsService {
         if (direct) return direct;
         const fromList = extractJobsFromApiResponse(body)[0];
         if (fromList) return fromList;
-        return findSeedJobById(numericId) ?? null;
+        return null;
       }),
-      catchError(() => of(findSeedJobById(numericId) ?? null))
+      catchError(() => of(null))
     );
   }
 
@@ -142,17 +156,11 @@ export class PublicJobsService {
     const params = this.buildParams(filters);
     const term = (filters.searchTerm || filters.keyword || '').trim();
 
-    const publicUrl = `${this.apiUrl}/public`;
     const listUrl = term ? `${this.apiUrl}/search/${encodeURIComponent(term)}` : `${this.apiUrl}`;
 
-    return this.http.get<unknown>(publicUrl, { params }).pipe(
+    return this.http.get<unknown>(listUrl, { params }).pipe(
       map((body) => extractJobsFromApiResponse(body)),
-      catchError(() =>
-        this.http.get<unknown>(listUrl, { params }).pipe(
-          map((body) => extractJobsFromApiResponse(body)),
-          catchError(() => of([] as PublicJobDto[]))
-        )
-      )
+      catchError(() => of([] as PublicJobDto[]))
     );
   }
 
@@ -174,17 +182,4 @@ export class PublicJobsService {
     return params;
   }
 
-  private pageFromSeed(filters: PublicJobsFilters, pageNumber: number, pageSize: number): PublicJobsPage {
-    const filtered = PUBLIC_JOB_SEED.filter((j) => matchesFilters(j, filters)).sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-    const { slice, totalCount } = paginate(filtered, pageNumber, pageSize);
-    return {
-      items: slice,
-      totalCount,
-      pageNumber,
-      pageSize,
-      source: 'seed',
-    };
-  }
 }

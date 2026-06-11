@@ -87,8 +87,11 @@ export function normalizeApiJob(raw: unknown): PublicJobDto | null {
     company = { id: Number(item['companyId'] ?? 0), name: item['companyName'] };
   }
 
-  const id = Number(item['id'] ?? item['jobPostId']);
-  if (!Number.isFinite(id) || id <= 0) return null;
+  const id = Number(item['id'] ?? item['jobPostId'] ?? item['Id'] ?? item['jobPostingId'] ?? item['JobPostingId']);
+  if (!Number.isFinite(id) || id <= 0) {
+    console.warn('[JobMapper] Invalid job ID in API response:', raw);
+    return null;
+  }
 
   return {
     id,
@@ -102,7 +105,7 @@ export function normalizeApiJob(raw: unknown): PublicJobDto | null {
     salaryMax: item['salaryMax'] as number | undefined,
     currency: item['currency'] as string | undefined,
     skills: (item['skills'] as PublicJobDto['skills']) ?? [],
-    applicantsCount: Number(item['applicantsCount'] ?? 0),
+    applicantsCount: Number(item['applicantsCount'] ?? item['applicationCount'] ?? item['ApplicationCount'] ?? item['jobApplicationsCount'] ?? (Array.isArray(item['jobApplications'] || item['JobApplications']) ? ((item['jobApplications'] || item['JobApplications']) as any[]).length : 0)),
     createdAt: String(item['createdAt'] ?? item['postedDate'] ?? new Date().toISOString()),
     expiryDate: item['expiryDate'] as string | undefined,
     description: item['description'] as string | undefined,

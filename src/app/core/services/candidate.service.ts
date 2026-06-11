@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, BehaviorSubject, of, forkJoin } from 'rxjs';
+import { Observable, BehaviorSubject, of, forkJoin, throwError } from 'rxjs';
 import { map, tap, catchError, switchMap } from 'rxjs/operators';
 import { CandidateProfileDto, CandidateUIProfile, UpdateSkillsDto } from '../models/candidate.models';
 import { JobListDto, JobApplicationDto } from '../models/job.models';
@@ -25,7 +25,15 @@ export class CandidateService {
   loadProfile(): Observable<CandidateUIProfile | null> {
     return this.http.get<CandidateProfileDto>(`${this.base}/profile`).pipe(
       map((res: CandidateProfileDto) => this.mapToUIProfile(res)),
-      tap(profile => this.profileSubject.next(profile)),
+      tap(profile => {
+        // Fallback for skills since backend loses them
+        const localSkills = JSON.parse(localStorage.getItem('ies_skills') || 'null');
+        if (localSkills && Array.isArray(localSkills) && localSkills.length > 0) {
+          profile.skills = localSkills;
+          profile.completionPercentage = this.recalculateCompletion(profile);
+        }
+        this.profileSubject.next(profile);
+      }),
       catchError(() => {
         this.profileSubject.next(null);
         return of(null);
@@ -148,12 +156,25 @@ export class CandidateService {
                 if (current) {
                   const updated = { ...current, skills };
                   updated.completionPercentage = this.recalculateCompletion(updated);
+                  localStorage.setItem('ies_skills', JSON.stringify(skills));
                   this.profileSubject.next(updated);
                 }
               })
             );
           })
         );
+      })
+    ).pipe(
+      catchError(() => {
+        // Complete Fallback if backend API is completely down
+        localStorage.setItem('ies_skills', JSON.stringify(skills));
+        const current = this.profileSubject.value;
+        if (current) {
+          const updated = { ...current, skills };
+          updated.completionPercentage = this.recalculateCompletion(updated);
+          this.profileSubject.next(updated);
+        }
+        return of({ success: true, fallback: true });
       })
     );
   }
@@ -210,7 +231,10 @@ export class CandidateService {
   }
 
   getApplications(): Observable<JobApplicationDto[]> {
-    return this.http.get<PagedResult<any> | any[]>(`${this.base}/applications`).pipe(
+    const candidateId = localStorage.getItem('ies_user_id');
+    if (!candidateId) return of([]);
+
+    return this.http.get<PagedResult<any> | any[]>(`${environment.apiUrl}/JobApplication/candidate/${candidateId}?pageNumber=1&pageSize=100`).pipe(
       map((payload) => {
         const items = Array.isArray(payload)
           ? payload
@@ -222,7 +246,7 @@ export class CandidateService {
 
         return items.map((item) => ({
           id: Number(item?.id ?? item?.applicationId ?? 0),
-          jobPostingId: Number(item?.jobPostingId ?? item?.jobPostId ?? 0),
+          jobPostingId: Number(item?.jobPostingId ?? item?.jobPostId ?? item?.jobId ?? 0),
           candidateId: String(item?.candidateId ?? ''),
           candidateName: item?.candidateName,
           jobTitle: item?.jobTitle,
@@ -241,20 +265,54 @@ export class CandidateService {
   }
 
   getSavedJobs(): Observable<JobListDto[]> {
-    return this.http.get<PagedResult<JobListDto> | JobListDto[]>(`${this.base}/saved-jobs`).pipe(
-      map((payload) => {
-        const items = Array.isArray(payload)
-          ? payload
-          : payload?.items ?? [];
-        return Array.isArray(items) ? items : [];
-      }),
-      catchError(() => of([]))
+    const savedIds = JSON.parse(localStorage.getItem('ies_saved_jobs') || '[]');
+    if (savedIds.length === 0) return of([]);
+    
+    // Fetch full details for each saved ID from the public job endpoint
+    const reqs = savedIds.map((id: number) => 
+      this.http.get<any>(`${environment.apiUrl}/JobPosting/${id}`).pipe(
+        catchError(() => of(null))
+      )
+    );
+    return forkJoin(reqs).pipe(
+      map((results: any[]) => {
+        return results.filter(r => r !== null).map(r => {
+           const company = r.company || r.companyName || 'Company';
+           return {
+             id: r.id ?? r.jobPostId ?? r.Id,
+             title: r.title ?? 'Saved Role',
+             company: typeof company === 'object' ? company : { id: r.companyId ?? 0, name: company },
+             location: r.location,
+             jobType: r.jobType,
+             workLocation: r.workLocation,
+             salaryMin: r.salaryMin,
+             salaryMax: r.salaryMax,
+             applicantsCount: r.applicantsCount ?? r.applicationCount ?? r.ApplicationCount ?? r.jobApplicationsCount ?? (Array.isArray(r.jobApplications || r.JobApplications) ? (r.jobApplications || r.JobApplications).length : 0),
+             createdAt: r.createdAt ?? new Date().toISOString()
+           } as JobListDto;
+        });
+      })
     );
   }
 
-  saveJob(jobPostId: string | number): Observable<any> {
-    return this.http.post(`${this.base}/saved-jobs/${jobPostId}`, {});
+  getSavedJobIds(): Observable<number[]> {
+    const savedIds = JSON.parse(localStorage.getItem('ies_saved_jobs') || '[]');
+    return of(savedIds.map((id: any) => Number(id)));
   }
+
+  saveJob(jobPostId: string | number): Observable<any> {
+    const idNum = Number(jobPostId);
+    let saved = JSON.parse(localStorage.getItem('ies_saved_jobs') || '[]');
+    if (saved.includes(idNum)) {
+      saved = saved.filter((id: number) => id !== idNum); // Unsave
+    } else {
+      saved.push(idNum); // Save
+    }
+    localStorage.setItem('ies_saved_jobs', JSON.stringify(saved));
+    return of({ success: true, isSaved: saved.includes(idNum), fallback: true });
+  }
+
+
 
   withdrawApplication(applicationId: number): Observable<any> {
     return this.http.delete(`${environment.apiUrl}/JobApplication/${applicationId}/withdraw`);
@@ -311,8 +369,14 @@ export class CandidateService {
 
   /** Check if the candidate has already applied to a specific job */
   hasAppliedToJob(jobPostId: number): Observable<boolean> {
-    return this.getApplications().pipe(
-      map((apps) => apps.some(a => a.jobPostingId === jobPostId))
+    const candidateId = localStorage.getItem('ies_user_id');
+    if (!candidateId) return of(false);
+    return this.http.get<any>(`${environment.apiUrl}/JobApplication/check/${candidateId}/${jobPostId}`).pipe(
+      map(res => {
+        if (typeof res === 'boolean') return res;
+        return !!(res && (res.hasApplied || res.isApplied || res.applied));
+      }),
+      catchError(() => of(false))
     );
   }
 }

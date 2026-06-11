@@ -39,6 +39,10 @@ export class JobDetails implements OnInit {
   readonly isApplying = signal(false);
   readonly job = signal<JobModel | null>(null);
 
+  // ─── Save Job State ───
+  readonly isJobSaved = signal(false);
+  readonly isSavingJob = signal(false);
+
   // ─── Apply Modal State ───
   readonly showApplyModal = signal(false);
   readonly cvFile = signal<File | null>(null);
@@ -65,7 +69,9 @@ export class JobDetails implements OnInit {
         this.job.set(model);
 
         if (this.authService.isAuthenticated() && this.authService.getRole()?.toLowerCase() === 'candidate') {
-          this.checkIfApplied(Number(model?.id ?? model?.jobPostId ?? 0));
+          const jobId = Number(model?.id ?? model?.jobPostId ?? 0);
+          this.checkIfApplied(jobId);
+          this.checkIfSaved(jobId);
         }
       });
   }
@@ -191,8 +197,16 @@ export class JobDetails implements OnInit {
           this.closeApplyModal();
         },
         error: (err) => {
-          const msg = err?.error?.message || err?.error?.title || 'Failed to submit application. Please try again.';
-          this.toastService.error(msg);
+          // Specifically handle duplicate application conflict (409 Conflict or generic 400 with message)
+          if (err.status === 409 || err?.error?.message?.toLowerCase().includes('already applied')) {
+             this.hasAlreadyApplied.set(true);
+             this.job.set({ ...currentJob, hasApplied: true });
+             this.toastService.error('You have already applied to this job.');
+             this.closeApplyModal();
+          } else {
+             const msg = err?.error?.message || err?.error?.title || 'Failed to submit application. Please try again.';
+             this.toastService.error(msg);
+          }
         }
       });
   }
@@ -230,8 +244,16 @@ export class JobDetails implements OnInit {
               this.closeApplyModal();
             },
             error: (err) => {
-              const msg = err?.error?.message || err?.error?.title || 'Failed to submit application.';
-              this.toastService.error(msg);
+              // Specifically handle duplicate application conflict
+              if (err.status === 409 || err?.error?.message?.toLowerCase().includes('already applied')) {
+                 this.hasAlreadyApplied.set(true);
+                 this.job.set({ ...currentJob, hasApplied: true });
+                 this.toastService.error('You have already applied to this job.');
+                 this.closeApplyModal();
+              } else {
+                 const msg = err?.error?.message || err?.error?.title || 'Failed to submit application.';
+                 this.toastService.error(msg);
+              }
             }
           });
       },
@@ -257,6 +279,46 @@ export class JobDetails implements OnInit {
             const current = this.job();
             if (current) this.job.set({ ...current, hasApplied: true });
           }
+        }
+      });
+  }
+
+  private checkIfSaved(jobPostId: number): void {
+    if (!jobPostId || jobPostId <= 0) return;
+    this.candidateService.getSavedJobIds().subscribe({
+      next: (savedIds) => {
+        this.isJobSaved.set(savedIds.includes(jobPostId));
+      }
+    });
+  }
+
+  toggleSaveJob(): void {
+    if (!this.authService.isAuthenticated()) {
+      this.toastService.show('Please login to save this job.', 'info');
+      this.router.navigate(['/login'], { queryParams: { returnUrl: this.router.url } });
+      return;
+    }
+
+    const currentJob = this.job();
+    if (!currentJob || this.isSavingJob() || this.isJobSaved()) return;
+
+    const jobId = Number(currentJob.id ?? currentJob.jobPostId);
+    if (!Number.isFinite(jobId) || jobId <= 0) return;
+
+    this.isSavingJob.set(true);
+    this.candidateService.saveJob(jobId)
+      .pipe(finalize(() => this.isSavingJob.set(false)))
+      .subscribe({
+        next: (res) => {
+          if (res && res.fallback) {
+             this.isJobSaved.set(res.isSaved);
+          } else {
+             this.isJobSaved.set(!this.isJobSaved()); // Toggle 
+          }
+          this.toastService.success(this.isJobSaved() ? 'Job saved!' : 'Job removed');
+        },
+        error: (err) => {
+          this.toastService.error(err?.error?.message || 'Failed to update job status.');
         }
       });
   }

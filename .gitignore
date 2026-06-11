@@ -44,3 +44,7 @@ __screenshots__/
 Thumbs.db
 
 testsprite_tests\tmp\config.json
+
+AGENTS.md
+.agents
+skills-lock.json

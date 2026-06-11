@@ -40,8 +40,13 @@ export class RecruiterApplicantsPage implements OnInit {
 
   ngOnInit(): void {
     const rawJobId = this.route.snapshot.paramMap.get('jobId');
-    const jobId = Number(rawJobId);
+    if (!rawJobId) {
+      // Global applicants mode
+      this.loadAllApplicants();
+      return;
+    }
 
+    const jobId = Number(rawJobId);
     if (!Number.isFinite(jobId) || jobId <= 0) {
       this.isLoading.set(false);
       this.toast.error('Invalid job id.');
@@ -60,6 +65,19 @@ export class RecruiterApplicantsPage implements OnInit {
         error: () => {
           this.applicants.set([]);
           this.toast.error('Failed to load applicants.');
+        }
+      });
+  }
+
+  loadAllApplicants(): void {
+    this.isLoading.set(true);
+    this.recruiterService.getAllApplicants()
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (applications) => this.applicants.set(applications ?? []),
+        error: () => {
+          this.applicants.set([]);
+          this.toast.error('Failed to load all applicants.');
         }
       });
   }

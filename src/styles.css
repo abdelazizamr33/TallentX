@@ -165,9 +165,9 @@
   --color-on-tertiary-fixed-variant: #6900b3;
 
   /* === SURFACE COLORS (Light Mode) - Stitch Spec === */
-  --color-background: #f7f9fb;
-  --color-surface: #f7f9fb;
-  --color-surface-bright: #f7f9fb;
+  --color-background: #eeeeee;
+  --color-surface: #eeeeee;
+  --color-surface-bright: #eeeeee;
   --color-surface-dim: #d8dadc;
   --color-surface-container: #eceef0;
   --color-surface-container-high: #e6e8ea;
@@ -270,10 +270,10 @@
 
   /* === SHADOWS (Ghost Shadows) === */
   --shadow-sm: 0 1px 2px 0 rgba(25, 28, 30, 0.04);
-  --shadow-md: 0 4px 8px -2px rgba(25, 28, 30, 0.04), 0 2px 4px -2px rgba(25, 28, 30, 0.04);
-  --shadow-lg: 0 12px 24px -4px rgba(25, 28, 30, 0.06), 0 4px 8px -2px rgba(25, 28, 30, 0.04);
-  --shadow-xl: 0 24px 48px -8px rgba(25, 28, 30, 0.06), 0 12px 24px -4px rgba(25, 28, 30, 0.04);
-  --shadow-2xl: 0 32px 64px -12px rgba(25, 28, 30, 0.06);
+  --shadow-md: 0 4px 8px -2px rgba(25, 28, 30, 0.08), 0 2px 4px -2px rgba(25, 28, 30, 0.08);
+  --shadow-lg: 0 12px 24px -4px rgba(25, 28, 30, 0.12), 0 4px 8px -2px rgba(25, 28, 30, 0.08);
+  --shadow-xl: 0 24px 48px -8px rgba(25, 28, 30, 0.12), 0 12px 24px -4px rgba(25, 28, 30, 0.08);
+  --shadow-2xl: 0 32px 64px -12px rgba(25, 28, 30, 0.16);
   
   /* Focus Shadow */
   --shadow-focus: 0 0 0 3px rgba(0, 88, 190, 0.25);
@@ -906,4 +906,14 @@ body {
   }
 }
 
+/* ===== RECRUITER SIDEBAR ===== */
+/* Ensure the recruiter sidebar stays fixed to viewport.
+   IMPORTANT: Do NOT add will-change, transform, contain, filter,
+   or backdrop-filter here — all of those create a new containing
+   block in CSS and silently break position:fixed. */
+.recruiter-sidebar {
+  position: fixed !important;
+  top: 7rem !important;
+  left: 1rem !important;
+}
 

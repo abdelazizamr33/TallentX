@@ -4,9 +4,11 @@ import { Router, RouterModule } from '@angular/router';
 import { RecruiterService, RecruiterStats, RecruiterJob, Applicant } from '../../core/services/recruiter';
 import { ToastService } from '../../core/services/toast.service';
 import { forkJoin, catchError, of } from 'rxjs';
+import { environment } from '../../../environments/environment';
 import { AnalyticsService } from '../../core/services/analytics.service';
 import { AuthService } from '../../core/services/auth.service';
 import { InterviewDto } from '../../core/models/interview.models';
+import { CompanyService } from '../../core/services/company.service';
 
 interface PipelinePoint {
   day: string;
@@ -18,6 +20,11 @@ interface PipelinePoint {
   standalone: true,
   imports: [CommonModule, RouterModule],
   templateUrl: './recruiter-dashboard.html',
+  styles: [`
+    :host {
+      display: contents;
+    }
+  `]
 })
 export class RecruiterDashboard implements OnInit {
   private recruiterService = inject(RecruiterService);
@@ -25,9 +32,13 @@ export class RecruiterDashboard implements OnInit {
   private analyticsService = inject(AnalyticsService);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private companyService = inject(CompanyService);
 
   isLoading = signal<boolean>(true);
   stats = signal<RecruiterStats | null>(null);
+  companyName = signal<string>('');
+  adminName = signal<string>('');
+  companyLogo = signal<string>('/logo.jpeg');
   recentJobs = signal<RecruiterJob[]>([]);
   recentApplicants = signal<Applicant[]>([]);
   upcomingInterviews = signal<InterviewDto[]>([]);
@@ -52,6 +63,24 @@ export class RecruiterDashboard implements OnInit {
 
   loadDashboardData(): void {
     this.isLoading.set(true);
+    
+    const companyId = this.authService.getCompanyId();
+    if (companyId) {
+      this.companyService.getCompany(companyId).pipe(catchError(() => of(null))).subscribe(company => {
+        if (company) {
+          this.companyName.set(company.name);
+          this.adminName.set(company.adminName || '');
+          if (company.logoPath) {
+            const normalizedPath = company.logoPath.replace(/\\/g, '/');
+            const logoUrl = normalizedPath.startsWith('http') 
+              ? normalizedPath 
+              : `${environment.baseUrl}${normalizedPath.startsWith('/') ? '' : '/'}${normalizedPath}`;
+            this.companyLogo.set(logoUrl);
+          }
+        }
+      });
+    }
+
     forkJoin({
       stats: this.recruiterService.getDashboardStats().pipe(catchError(() => of(null))),
       jobs: this.recruiterService.getJobPostings().pipe(catchError(() => of([]))),
@@ -121,6 +150,42 @@ export class RecruiterDashboard implements OnInit {
 
   showComingSoon(feature: string): void {
     this.toast.show(`${feature} is coming soon.`, 'info');
+  }
+
+  exportReport(): void {
+    const statsData = this.stats();
+    if (!statsData) {
+      this.toast.show('No data to export', 'error');
+      return;
+    }
+    
+    // Client-side CSV export since there's no backend dashboard export
+    const csvContent = "data:text/csv;charset=utf-8," 
+        + "Metric,Value\n"
+        + `Interviews Scheduled,${statsData.interviewsScheduled}\n`
+        + `Total Applicants,${statsData.totalApplicants}\n`
+        + `Active Job Posts,${statsData.activeJobs}\n`;
+        
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `dashboard_report_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    this.toast.success('Report exported successfully');
+  }
+
+  shareDashboard(): void {
+    navigator.clipboard.writeText(window.location.href);
+    this.toast.success('Dashboard link copied to clipboard');
+  }
+
+  onLogoError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    if (img.src !== '/logo.jpeg') {
+      img.src = '/logo.jpeg';
+    }
   }
 
   logout(): void {

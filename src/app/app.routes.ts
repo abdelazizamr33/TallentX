@@ -26,7 +26,7 @@ export const routes: Routes = [
   // Registration Flows Explicit Routes (if components exist, else keep redirecting to generic Register page)
   { path: 'register/candidate', loadComponent: () => import('./pages/register/register').then(m => m.Register) },
   { path: 'register/company', loadComponent: () => import('./pages/employer-register/employer-register').then(m => m.EmployerRegisterPage) },
-  { path: 'register/recruiter', loadComponent: () => import('./pages/register/register').then(m => m.Register) },
+  { path: 'register/recruiter', redirectTo: 'register/company', pathMatch: 'full' },
 
   // Candidate Routes
   {

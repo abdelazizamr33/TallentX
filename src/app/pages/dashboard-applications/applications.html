@@ -58,7 +58,8 @@
           </div>
           <div class="flex items-center gap-2">
             <span class="rounded-full bg-primary-container/30 px-3 py-1 text-label-md text-on-primary-container">{{ app.status }}</span>
-            <a [routerLink]="['/jobs', app.jobPostingId]" class="rounded-lg bg-surface-container px-3 py-1.5 text-label-sm text-on-surface">View Job</a>
+            <a [routerLink]="['/candidate/applications', app.id, 'track']" class="rounded-lg bg-primary px-3 py-1.5 text-label-sm text-on-primary font-semibold hover:opacity-90">Track Status</a>
+            <a [routerLink]="['/jobs', app.jobPostingId]" class="rounded-lg bg-surface-container px-3 py-1.5 text-label-sm text-on-surface hover:bg-surface-container-high transition-colors">View Job</a>
             <button
               *ngIf="app.status !== 'Withdrawn' && app.status !== 'Accepted'"
               type="button"

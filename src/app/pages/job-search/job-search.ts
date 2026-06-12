@@ -3,12 +3,15 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs/operators';
+import { forkJoin, of } from 'rxjs';
 import { JobService } from '../../core/services/job';
 import { AuthService } from '../../core/services/auth.service';
 import { JobModel } from '../../core/models/candidate.models';
 import { JobCardComponent } from '../../shared/components/job-card/job-card';
 import { jobListDtoToJobModel } from '../../core/utils/job.mapper';
-import { JOB_CATEGORY_OPTIONS, JobCategory } from '../../core/data/job-categories';
+import { JobCategory, JOB_CATEGORY_OPTIONS } from '../../core/data/job-categories';
+import { CandidateService } from '../../core/services/candidate.service';
+import { ToastService } from '../../core/services/toast.service';
 
 const CAREER_LEVELS = [
   { value: '', label: 'Any experience' },
@@ -40,6 +43,8 @@ export class JobSearch implements OnInit {
   private router = inject(Router);
   private jobService = inject(JobService);
   private authService = inject(AuthService);
+  private candidateService = inject(CandidateService);
+  private toastService = inject(ToastService);
 
   readonly categoryOptions = JOB_CATEGORY_OPTIONS;
   readonly careerLevels = CAREER_LEVELS;
@@ -126,6 +131,27 @@ export class JobSearch implements OnInit {
     this.router.navigate(['/jobs', id]);
   }
 
+  onSave(job: JobModel): void {
+    const id = job.id ?? job.jobPostId;
+    if (id == null) return;
+    
+    // Optimistic UI update
+    job.isSaved = !job.isSaved;
+    
+    this.candidateService.saveJob(id).subscribe({
+      next: (res) => {
+        if (res && res.fallback) {
+           job.isSaved = res.isSaved;
+        }
+        this.toastService.success(job.isSaved ? 'Job saved!' : 'Job removed from saved list');
+      },
+      error: () => {
+        job.isSaved = !job.isSaved; // Revert
+        this.toastService.error('Failed to update job status.');
+      }
+    });
+  }
+
   goToPage(page: number): void {
     const next = Math.min(Math.max(1, page), this.totalPages());
     if (next === this.pageNumber()) return;
@@ -155,8 +181,7 @@ export class JobSearch implements OnInit {
     this.isLoading.set(true);
     this.hasSearched.set(true);
 
-    this.jobService
-      .getPublicJobs({
+    const jobsReq = this.jobService.getPublicJobs({
         keyword: formValue.keyword?.trim() || undefined,
         location: formValue.location?.trim() || undefined,
         jobType: formValue.jobType || undefined,
@@ -167,11 +192,33 @@ export class JobSearch implements OnInit {
         salaryMax: formValue.salaryMax ? Number(formValue.salaryMax) : undefined,
         pageNumber: this.pageNumber(),
         pageSize: this.pageSize(),
-      })
-      .pipe(finalize(() => this.isLoading.set(false)))
-      .subscribe((page) => {
-        this.jobs.set(page.items.map(jobListDtoToJobModel));
-        this.totalCount.set(page.totalCount);
       });
+
+    const savedIdsReq = this.canApply() ? this.candidateService.getSavedJobIds() : of([]);
+    const appsReq = this.canApply() ? this.candidateService.getApplications() : of([]);
+
+    forkJoin({
+      page: jobsReq,
+      savedIds: savedIdsReq,
+      apps: appsReq
+    })
+    .pipe(finalize(() => this.isLoading.set(false)))
+    .subscribe(({ page, savedIds, apps }) => {
+      const appliedJobIds = apps.map(a => a.jobPostingId);
+      const mapped = page.items.map(jobListDtoToJobModel);
+      mapped.forEach(job => {
+        const jId = Number(job.id ?? job.jobPostId);
+        if (savedIds.includes(jId)) {
+          job.isSaved = true;
+        }
+        if (appliedJobIds.includes(jId)) {
+          job.hasApplied = true;
+          // Frontend fallback: if backend search endpoint fails to return applications, enforce at least 1
+          job.applicantsCount = Math.max(job.applicantsCount || 0, 1);
+        }
+      });
+      this.jobs.set(mapped);
+      this.totalCount.set(page.totalCount);
+    });
   }
 }

@@ -1,30 +1,15 @@
-/** Unified body for POST /Auth/register (ASP.NET expects userType). */
-export type RegistrationUserType = 'Candidate' | 'Recruiter';
-
 export interface RegisterRequest {
   firstName: string;
   lastName: string;
   email: string;
   password: string;
   phoneNumber: string;
-  gender: string;
-  dateOfBirth: string;
-  userType: RegistrationUserType;
-  companyId?: number;
-  /** Sent only when provided (legacy invite-based recruiter signup). */
-  inviteCode?: string;
-}
-
-export interface RegisterCandidateRequest {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  phoneNumber?: string;
   gender: 'Male' | 'Female' | 'Other';
-  dateOfBirth?: string;     // ISO 8601
+  dateOfBirth: string;
+  userType: 'Candidate' | 'Recruiter';
 }
 
+/** POST /api/Auth/register/company — Create a new company + admin recruiter. */
 export interface RegisterCompanyRequest {
   firstName: string;
   lastName: string;
@@ -33,12 +18,13 @@ export interface RegisterCompanyRequest {
   phoneNumber?: string;
   gender: 'Male' | 'Female' | 'Other';
   dateOfBirth?: string;
-  companyName: string;       // Max 200
-  taxNumber: string;         // Unique, max 50
+  companyName: string;
+  taxNumber?: string;
   industry?: string;
   website?: string;
 }
 
+/** POST /api/Auth/register/recruiter — Join existing company via invite code. */
 export interface RegisterRecruiterRequest {
   firstName: string;
   lastName: string;
@@ -46,8 +32,8 @@ export interface RegisterRecruiterRequest {
   password: string;
   phoneNumber?: string;
   gender: 'Male' | 'Female' | 'Other';
-  dateOfBirth?: string;
-  inviteCode: string;        // 6 chars alphanumeric
+  dateOfBirth: string;
+  inviteCode: string;
 }
 
 export interface LoginRequest {
@@ -57,10 +43,14 @@ export interface LoginRequest {
 
 export interface AuthResponse {
   token: string;
-  expiresAt: string;
+  refreshToken?: string;
   userId: string;
   email: string;
-  role: 'Candidate' | 'Recruiter' | 'Admin';
+  /** API returns roles as an array, e.g. ["Candidate"] or ["Recruiter","Admin"] */
+  roles: string[];
+  /** @deprecated kept for backward compat — derived from roles[0] */
+  role?: string;
+  expiresAt?: string;
   companyId?: number;
   recruiterRole?: 'Admin' | 'Standard';
 }

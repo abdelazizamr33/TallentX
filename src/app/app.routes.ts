@@ -26,7 +26,7 @@ export const routes: Routes = [
   // Registration Flows Explicit Routes (if components exist, else keep redirecting to generic Register page)
   { path: 'register/candidate', loadComponent: () => import('./pages/register/register').then(m => m.Register) },
   { path: 'register/company', loadComponent: () => import('./pages/employer-register/employer-register').then(m => m.EmployerRegisterPage) },
-  { path: 'register/recruiter', loadComponent: () => import('./pages/register/register').then(m => m.Register) },
+  { path: 'register/recruiter', redirectTo: 'register/company', pathMatch: 'full' },
 
   // Candidate Routes
   {
@@ -45,9 +45,14 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/candidate-interviews/candidate-interviews').then(m => m.CandidateInterviewsPage),
   },
   {
-    path: 'candidate/assessments/:id',
+    path: 'candidate/assessments',
     canActivate: [candidateGuard],
     loadComponent: () => import('./pages/take-assessment/take-assessment').then(m => m.TakeAssessmentPage),
+  },
+  {
+    path: 'candidate/assessments/:id/take',
+    canActivate: [candidateGuard],
+    loadComponent: () => import('./pages/assessment-quiz/assessment-quiz').then(m => m.AssessmentQuizPage),
   },
   {
     path: 'dashboard/saved-jobs',
@@ -58,6 +63,11 @@ export const routes: Routes = [
     path: 'dashboard/applications',
     canActivate: [authGuard],
     loadComponent: () => import('./pages/dashboard-applications/applications').then(m => m.ApplicationsPage),
+  },
+  {
+    path: 'candidate/applications/:id/track',
+    canActivate: [candidateGuard],
+    loadComponent: () => import('./pages/application-tracking/application-tracking').then(m => m.ApplicationTrackingPage),
   },
   { path: 'candidate/saved-jobs', redirectTo: 'dashboard/saved-jobs', pathMatch: 'full' },
   { path: 'candidate/applications', redirectTo: 'dashboard/applications', pathMatch: 'full' },

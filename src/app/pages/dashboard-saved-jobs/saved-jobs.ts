@@ -29,15 +29,29 @@ export class SavedJobsPage implements OnInit {
 
   loadSavedJobs(): void {
     this.isLoading.set(true);
-    this.candidateService.getSavedJobs()
+    import('rxjs').then(({ forkJoin }) => {
+      forkJoin({
+        saved: this.candidateService.getSavedJobs(),
+        apps: this.candidateService.getApplications()
+      })
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
-        next: (items) => this.jobs.set(items ?? []),
+        next: ({ saved, apps }) => {
+          const appliedIds = apps.map(a => a.jobPostingId);
+          const items = saved || [];
+          items.forEach(job => {
+            if (appliedIds.includes(Number(job.id ?? 0))) {
+              job.applicantsCount = Math.max(job.applicantsCount || 0, 1);
+            }
+          });
+          this.jobs.set(items);
+        },
         error: () => {
           this.jobs.set([]);
           this.toast.error('Failed to load saved jobs.');
         }
       });
+    });
   }
 
   unsave(jobId: number): void {
@@ -48,5 +62,13 @@ export class SavedJobsPage implements OnInit {
       },
       error: () => this.toast.error('Failed to update saved job.')
     });
+  }
+
+  getCompanyName(job: any): string {
+    if (!job) return 'Company';
+    if (job.companyName) return job.companyName;
+    if (typeof job.company === 'string') return job.company;
+    if (job.company && typeof job.company === 'object') return job.company.name || 'Company';
+    return 'Company';
   }
 }

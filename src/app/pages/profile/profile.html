@@ -1,4 +1,4 @@
-﻿<div class="min-h-screen bg-surface-container-lowest px-4 py-8 md:px-8">
+<div class="min-h-screen bg-surface-container-lowest px-4 py-8 md:px-8">
   <div class="mx-auto max-w-7xl" *ngIf="candidateService.profile$ | async as profile; else loading">
     <header class="mb-8 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
       <div class="flex items-center gap-5">
@@ -27,10 +27,10 @@
         </div>
       </div>
 
-      <button class="btn btn-primary btn-lg">
+      <a routerLink="/settings" class="btn btn-primary btn-lg">
         <i class="fa-solid fa-pen-to-square"></i>
         Edit Profile
-      </button>
+      </a>
     </header>
 
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
@@ -73,10 +73,6 @@
         <article class="rounded-3xl bg-surface-container-lowest p-6 shadow-sm md:p-8">
           <div class="mb-6 flex items-center justify-between">
             <h2 class="text-headline-sm font-bold text-on-surface">Professional Resume</h2>
-            <button type="button" class="btn btn-ai">
-              <i class="fa-solid fa-sparkles"></i>
-              AI Enhance CV
-            </button>
           </div>
 
           <div *ngIf="profile.hasResume" class="rounded-2xl bg-success-container/30 p-5">
@@ -91,6 +87,11 @@
                 </div>
               </div>
               <div class="flex gap-2">
+                <label class="btn btn-primary btn-sm cursor-pointer whitespace-nowrap">
+                  <span *ngIf="!isUploadingResume">Replace</span>
+                  <span *ngIf="isUploadingResume"><i class="fa-solid fa-spinner fa-spin"></i></span>
+                  <input type="file" class="hidden" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" [disabled]="isUploadingResume" (change)="onUploadResume($event)" />
+                </label>
                 <button type="button" (click)="downloadResume()" class="btn btn-outline btn-sm">Download</button>
                 <button type="button" (click)="onDeleteResume()" [disabled]="isDeletingResume" class="btn btn-sm bg-error text-on-error hover:opacity-90">
                   <span *ngIf="!isDeletingResume">Remove</span>

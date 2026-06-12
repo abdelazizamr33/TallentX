@@ -17,6 +17,10 @@ export class AssessmentService {
     return this.http.get<AssessmentDetailDto[]>(`${this.base}/job/${jobId}`);
   }
 
+  getById(id: number): Observable<AssessmentDetailDto> {
+    return this.http.get<AssessmentDetailDto>(`${this.base}/${id}`);
+  }
+
   generate(jobId: number): Observable<AssessmentDetailDto> {
     return this.http.post<AssessmentDetailDto>(`${this.base}/job/${jobId}/generate`, {});
   }

@@ -8,11 +8,15 @@ import { InterviewDto } from '../../core/models/interview.models';
 import { ToastService } from '../../core/services/toast.service';
 import { Router } from '@angular/router';
 import { JobApplicationDto } from '../../core/models/job.models';
-import {
-  UpcomingInterviewItem,
-  buildStaticUpcomingInterviews,
-  InterviewType,
-} from '../../core/data/upcoming-interviews.seed';
+export type InterviewType = 'Online' | 'On-site' | 'Technical' | 'HR';
+export type InterviewDisplayStatus = 'Scheduled' | 'Confirmed' | 'Pending' | 'Rescheduled' | 'Cancelled';
+
+export interface UpcomingInterviewItem extends InterviewDto {
+  companyName: string;
+  interviewType: InterviewType;
+  displayStatus: InterviewDisplayStatus;
+  roomName?: string;
+}
 import { RecruiterService } from '../../core/services/recruiter';
 
 export type InterviewTimeBucket = 'today' | 'tomorrow' | 'thisWeek' | 'later';
@@ -111,22 +115,20 @@ export class InterviewSchedulingPage implements OnInit {
       .subscribe({
         next: (items) => {
           const apiItems = (items ?? []).map((item) => this.toDisplayItem(item));
-          this.interviews.set(this.mergeWithStatic(apiItems));
+          this.interviews.set(
+            apiItems.sort(
+              (a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime()
+            )
+          );
         },
         error: () => {
-          this.interviews.set(buildStaticUpcomingInterviews());
+          this.interviews.set([]);
+          this.toast.error('Failed to load interviews.');
         },
       });
   }
 
-  private mergeWithStatic(apiItems: UpcomingInterviewItem[]): UpcomingInterviewItem[] {
-    const staticItems = buildStaticUpcomingInterviews();
-    const apiIds = new Set(apiItems.map((i) => i.id));
-    const merged = [...apiItems, ...staticItems.filter((s) => !apiIds.has(s.id))];
-    return merged.sort(
-      (a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime()
-    );
-  }
+
 
   private toDisplayItem(item: InterviewDto): UpcomingInterviewItem {
     const roomName = item.meetingLink?.split('/').pop();
@@ -137,7 +139,6 @@ export class InterviewSchedulingPage implements OnInit {
       interviewType: 'Online',
       displayStatus: 'Scheduled',
       roomName,
-      isStatic: false,
     };
   }
 
@@ -248,13 +249,6 @@ export class InterviewSchedulingPage implements OnInit {
   }
 
   rescheduleInterview(item: UpcomingInterviewItem): void {
-    if (item.isStatic) {
-      this.interviews.update((list) =>
-        list.map((row) =>
-          row.id === item.id ? { ...row, displayStatus: 'Rescheduled' as const } : row
-        )
-      );
-    }
     this.toast.show(`Reschedule request noted for ${item.candidateName}.`, 'info');
   }
 
@@ -306,7 +300,9 @@ export class InterviewSchedulingPage implements OnInit {
           display.companyName = 'Your Company';
           display.interviewType = 'Online';
           display.displayStatus = 'Scheduled';
-          this.interviews.update((current) => this.mergeWithStatic([display, ...current]));
+          this.interviews.update((current) => 
+            [display, ...current].sort((a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime())
+          );
           this.interviewForm.reset({
             jobApplicationId: 0,
             scheduledTime: '',
@@ -324,19 +320,10 @@ export class InterviewSchedulingPage implements OnInit {
   }
 
   cancelInterview(interviewId: number): void {
-    const target = this.interviews().find((i) => i.id === interviewId);
-    if (target?.isStatic) {
-      this.interviews.update((current) =>
-        current.map((item) => (item.id === interviewId ? { ...item, status: 'Cancelled' } : item))
-      );
-      this.toast.success('Interview cancelled.');
-      return;
-    }
-
     this.interviewService.cancel(interviewId).subscribe({
       next: () => {
         this.interviews.update((current) =>
-          current.map((item) => (item.id === interviewId ? { ...item, status: 'Cancelled' } : item))
+          current.map((item) => (item.id === interviewId ? { ...item, status: 'Cancelled', displayStatus: 'Cancelled' } : item))
         );
         this.toast.success('Interview cancelled.');
       },

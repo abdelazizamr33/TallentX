@@ -111,6 +111,19 @@ export function normalizeApiJob(raw: unknown): PublicJobDto | null {
     description: item['description'] as string | undefined,
     requirements: item['requirements'] as string | undefined,
     category: item['category'] as JobCategory | undefined,
+    employmentType: item['employmentType'] as string | undefined,
+    isActive: item['isActive'] as boolean | undefined,
+    applicationDeadline: item['applicationDeadline'] as string | undefined,
+    department: item['department'] as string | undefined,
+    gpa: item['gpa'] !== null ? Number(item['gpa']) : undefined,
+    gpaPriority: item['gpaPriority'] as string | undefined,
+    experienceMinYears: item['experienceMinYears'] !== null ? Number(item['experienceMinYears']) : undefined,
+    experienceMaxYears: item['experienceMaxYears'] !== null ? Number(item['experienceMaxYears']) : undefined,
+    experiencePriority: item['experiencePriority'] as string | undefined,
+    salaryRange: item['salaryRange'] as string | undefined,
+    degrees: item['degrees'] as any[] | undefined,
+    roles: item['roles'] as any[] | undefined,
+    requiredSkills: item['requiredSkills'] as any[] | undefined,
   };
 }
 

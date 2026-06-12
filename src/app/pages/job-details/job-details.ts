@@ -42,6 +42,7 @@ export class JobDetails implements OnInit {
   // ─── Save Job State ───
   readonly isJobSaved = signal(false);
   readonly isSavingJob = signal(false);
+  readonly isRecruiterUser = signal(false);
 
   // ─── Apply Modal State ───
   readonly showApplyModal = signal(false);
@@ -68,16 +69,25 @@ export class JobDetails implements OnInit {
         const model = result ? jobListDtoToJobModel(result) : null;
         this.job.set(model);
 
-        if (this.authService.isAuthenticated() && this.authService.getRole()?.toLowerCase() === 'candidate') {
-          const jobId = Number(model?.id ?? model?.jobPostId ?? 0);
-          this.checkIfApplied(jobId);
-          this.checkIfSaved(jobId);
+        if (this.authService.isAuthenticated()) {
+          const role = this.authService.getRole()?.toLowerCase() || '';
+          if (role.includes('recruiter') || role.includes('admin')) {
+             this.isRecruiterUser.set(true);
+          } else if (role === 'candidate') {
+            const jobId = Number(model?.id ?? model?.jobPostId ?? 0);
+            this.checkIfApplied(jobId);
+            this.checkIfSaved(jobId);
+          }
         }
       });
   }
 
   goBack(): void {
-    this.router.navigate(['/jobs']);
+    if (this.isRecruiterUser()) {
+      this.router.navigate(['/recruiter/jobs']);
+    } else {
+      this.router.navigate(['/jobs']);
+    }
   }
 
   /** Called when user clicks the "Apply Now" button */
@@ -350,7 +360,7 @@ export class JobDetails implements OnInit {
     if (job.salaryMin && job.salaryMax) return `$${job.salaryMin.toLocaleString()} – $${job.salaryMax.toLocaleString()}`;
     if (job.salaryMin) return `$${job.salaryMin.toLocaleString()}+`;
     if (job.salaryMax) return `Up to $${job.salaryMax.toLocaleString()}`;
-    return 'Competitive';
+    return 'Not specified';
   }
 
   /** Get employment type display */
@@ -369,11 +379,11 @@ export class JobDetails implements OnInit {
   getPostedDate(): string {
     const job = this.job();
     const dateStr = job?.postedDate || job?.createdAt;
-    if (!dateStr) return 'Recently';
+    if (!dateStr) return 'Unknown';
     try {
       return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     } catch {
-      return 'Recently';
+      return 'Unknown';
     }
   }
 }

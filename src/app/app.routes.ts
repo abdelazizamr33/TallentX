@@ -99,6 +99,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/recruiter-applicants/recruiter-applicants').then(m => m.RecruiterApplicantsPage),
   },
   {
+    path: 'recruiter/applicants',
+    canActivate: [recruiterGuard],
+    loadComponent: () => import('./pages/recruiter-applicants/recruiter-applicants').then(m => m.RecruiterApplicantsPage),
+  },
+  {
     path: 'recruiter/interviews',
     canActivate: [recruiterGuard],
     loadComponent: () => import('./pages/interview-scheduling/interview-scheduling').then(m => m.InterviewSchedulingPage),

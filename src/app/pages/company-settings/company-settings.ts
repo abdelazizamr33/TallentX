@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CompanyService } from '../../core/services/company.service';
@@ -22,6 +22,11 @@ export class CompanySettingsPage implements OnInit {
   isGenerating = signal<boolean>(false);
   showGenerateForm = signal<boolean>(false);
 
+  // Company Details
+  companyName = signal<string>('');
+  companyIndustry = signal<string>('');
+  companyWebsite = signal<string>('');
+
   // Form fields for generating new code
   maxUses = signal<number>(5);
   validDays = signal<number>(30);
@@ -43,6 +48,16 @@ export class CompanySettingsPage implements OnInit {
       error: () => {
         this.toast.error('Failed to load invite codes');
         this.isLoadingCodes.set(false);
+      }
+    });
+
+    this.companyService.getCompany(companyId).subscribe({
+      next: (company) => {
+        if (company) {
+          this.companyName.set(company.name || '');
+          this.companyIndustry.set(company.industry || '');
+          this.companyWebsite.set(company.website || '');
+        }
       }
     });
   }

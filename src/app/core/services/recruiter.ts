@@ -153,6 +153,35 @@ export class RecruiterService {
     return this.http.get<JobApplicationDto[]>(`${this.jobAppUrl}/job/${jobPostId}`, { params });
   }
 
+  getAllApplicants(): Observable<JobApplicationDto[]> {
+    const companyId = this.getCompanyIdFromSession();
+    if (!companyId) {
+      return of([]);
+    }
+
+    return this.getCompanyJobs(companyId, 1, 50).pipe(
+      switchMap((jobs) => {
+        if (!jobs.length) {
+          return of([] as JobApplicationDto[]);
+        }
+
+        return forkJoin(
+          jobs.map((job) =>
+            this.getJobApplicants(job.id, 1, 50).pipe(
+              catchError(() => of([] as JobApplicationDto[]))
+            )
+          )
+        ).pipe(
+          map((groups) => groups.flat())
+        );
+      }),
+      map((applicants) => applicants
+        .sort((left, right) => new Date(right.appliedAt).getTime() - new Date(left.appliedAt).getTime())
+      ),
+      catchError(() => of([]))
+    );
+  }
+
   getApplicants(): Observable<Applicant[]> {
     const companyId = this.getCompanyIdFromSession();
     if (!companyId) {

@@ -6,6 +6,8 @@ export interface CompanyDetailDto {
   website?: string;
   logoPath?: string;
   size?: string;
+  adminName?: string;
+  adminId?: string;
 }
 
 export interface InviteCodeDto {

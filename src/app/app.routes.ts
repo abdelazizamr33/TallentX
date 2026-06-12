@@ -45,9 +45,14 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/candidate-interviews/candidate-interviews').then(m => m.CandidateInterviewsPage),
   },
   {
-    path: 'candidate/assessments/:id',
+    path: 'candidate/assessments',
     canActivate: [candidateGuard],
     loadComponent: () => import('./pages/take-assessment/take-assessment').then(m => m.TakeAssessmentPage),
+  },
+  {
+    path: 'candidate/assessments/:id/take',
+    canActivate: [candidateGuard],
+    loadComponent: () => import('./pages/assessment-quiz/assessment-quiz').then(m => m.AssessmentQuizPage),
   },
   {
     path: 'dashboard/saved-jobs',

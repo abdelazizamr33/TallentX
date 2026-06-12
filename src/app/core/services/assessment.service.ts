@@ -21,11 +21,17 @@ export class AssessmentService {
     return this.http.post<AssessmentDetailDto>(`${this.base}/job/${jobId}/generate`, {});
   }
 
-  start(assessmentId: number): Observable<any> {
-    return this.http.post(`${this.base}/${assessmentId}/start`, {});
+  // --- CANDIDATE ENDPOINTS ---
+
+  getMyAssessments(): Observable<import('../models/assessment.models').CandidateAssessmentDto[]> {
+    return this.http.get<import('../models/assessment.models').CandidateAssessmentDto[]>(`${this.base}/my-assessments`);
   }
 
-  submit(assessmentId: number, answers: any): Observable<any> {
-    return this.http.post(`${this.base}/${assessmentId}/submit`, answers);
+  start(assessmentId: number, jobApplicationId: number): Observable<import('../models/assessment.models').CandidateAssessmentDto> {
+    return this.http.post<import('../models/assessment.models').CandidateAssessmentDto>(`${this.base}/${assessmentId}/start?jobApplicationId=${jobApplicationId}`, {});
+  }
+
+  submit(assessmentId: number, answers: any): Observable<import('../models/assessment.models').CandidateAssessmentDto> {
+    return this.http.post<import('../models/assessment.models').CandidateAssessmentDto>(`${this.base}/${assessmentId}/submit`, answers);
   }
 }

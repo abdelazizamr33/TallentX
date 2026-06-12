@@ -49,8 +49,12 @@ export class JobCardComponent {
     }
   }
 
-  onSave(): void {
-    if (this.job && !this.job.isSaved && !this.isSaving) {
+  onSave(event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
+    if (this.job && !this.isSaving) {
       this.save.emit(this.job);
     }
   }

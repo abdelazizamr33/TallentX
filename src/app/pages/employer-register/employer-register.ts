@@ -4,6 +4,8 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
+import { RegisterCompanyRequest, RegisterRecruiterRequest } from '../../core/models/auth.models';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-employer-register-page',
@@ -17,125 +19,129 @@ export class EmployerRegisterPage {
   private authService = inject(AuthService);
   private toast = inject(ToastService);
 
-  companyForm: FormGroup;
+  mode: 'join' | 'create' = 'join';
+  joinForm: FormGroup;
+  createForm: FormGroup;
+  
   isLoading = false;
-  selectedLogoFile: File | null = null;
-  selectedLogoFileName = '';
+  showPassword = false;
 
   constructor() {
-    this.companyForm = this.fb.group({
+    // Common validators
+    const passwordValidators = [
+      Validators.required,
+      Validators.minLength(8),
+      Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$')
+    ];
+
+    // Form for Joining an existing company
+    this.joinForm = this.fb.group({
       firstName: ['', Validators.required],
       lastName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
-      password: [
-        '',
-        [
-          Validators.required,
-          Validators.minLength(8),
-          Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$')
-        ]
-      ],
+      password: ['', passwordValidators],
+      phoneNumber: ['', Validators.required],
+      gender: ['Male', Validators.required],
+      dateOfBirth: ['', Validators.required],
+      inviteCode: ['', Validators.required]
+    });
+
+    // Form for Creating a new company
+    this.createForm = this.fb.group({
+      firstName: ['', Validators.required],
+      lastName: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', passwordValidators],
       phoneNumber: ['', Validators.required],
       gender: ['Male', Validators.required],
       dateOfBirth: ['', Validators.required],
       companyName: ['', Validators.required],
       industry: ['', Validators.required],
       website: [''],
-      taxNumber: ['', Validators.required],
       description: ['']
     });
   }
 
-  get f() { return this.companyForm.controls; }
-
-  openLogoPicker(fileInput: HTMLInputElement): void {
-    if (this.isLoading) {
-      return;
-    }
-    fileInput.click();
+  get activeForm(): FormGroup {
+    return this.mode === 'join' ? this.joinForm : this.createForm;
   }
 
-  onLogoSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0] ?? null;
+  get f() { 
+    return this.activeForm.controls; 
+  }
 
-    if (!file) {
-      this.selectedLogoFile = null;
-      this.selectedLogoFileName = '';
-      return;
-    }
+  setMode(newMode: 'join' | 'create') {
+    this.mode = newMode;
+  }
 
-    const maxBytes = 5 * 1024 * 1024;
-    if (!file.type.startsWith('image/')) {
-      this.toast.error('Please select a valid image file (PNG, JPG, or SVG).');
-      input.value = '';
-      this.selectedLogoFile = null;
-      this.selectedLogoFileName = '';
-      return;
-    }
-
-    if (file.size > maxBytes) {
-      this.toast.error('Logo file is too large. Maximum size is 5MB.');
-      input.value = '';
-      this.selectedLogoFile = null;
-      this.selectedLogoFileName = '';
-      return;
-    }
-
-    this.selectedLogoFile = file;
-    this.selectedLogoFileName = file.name;
-    this.toast.show('Logo selected. It will be completed in company settings after registration.', 'info');
+  togglePassword() {
+    this.showPassword = !this.showPassword;
   }
 
   onSubmit() {
-    if (this.companyForm.invalid) {
-      this.companyForm.markAllAsTouched();
+    if (this.activeForm.invalid) {
+      this.activeForm.markAllAsTouched();
       return;
     }
 
     this.isLoading = true;
-    const raw = this.companyForm.value;
-    const payload = {
-      firstName: raw.firstName,
-      lastName: raw.lastName,
-      email: raw.email,
-      password: raw.password,
-      phoneNumber: raw.phoneNumber,
-      gender: raw.gender,
-      dateOfBirth: raw.dateOfBirth ? new Date(raw.dateOfBirth).toISOString() : raw.dateOfBirth,
-      companyName: raw.companyName,
-      taxNumber: raw.taxNumber,
-      industry: raw.industry,
-      website: raw.website
-    };
+    const raw = this.activeForm.value;
 
-    this.authService.registerCompany(payload).subscribe({
-      next: (res) => {
-        if (res) {
-          this.toast.success('Company registered successfully! Welcome to TallentX.');
-          if (this.selectedLogoFileName) {
-            this.toast.show('Company logo selected. Complete logo upload from Company Settings.', 'info');
+    if (this.mode === 'join') {
+      const payload: RegisterRecruiterRequest = {
+        firstName: raw.firstName,
+        lastName: raw.lastName,
+        email: raw.email,
+        password: raw.password,
+        phoneNumber: raw.phoneNumber,
+        gender: raw.gender,
+        dateOfBirth: raw.dateOfBirth ? new Date(raw.dateOfBirth).toISOString() : raw.dateOfBirth,
+        inviteCode: raw.inviteCode
+      };
+
+      this.authService.registerRecruiter(payload).pipe(
+        finalize(() => this.isLoading = false)
+      ).subscribe({
+        next: (res) => {
+          if (res) {
+            this.toast.success('Successfully joined the company! Welcome to TallentX.');
+            this.router.navigate(['/recruiter/dashboard']);
           }
-          this.router.navigate(['/recruiter/dashboard']);
+        },
+        error: (err) => {
+          const message = err?.error?.message || 'Failed to join company. Please check your invite code.';
+          this.toast.error(message);
         }
-      },
-      error: (err) => {
-        this.isLoading = false;
-        const message = err?.error?.message || 'Company registration failed. Please review your data.';
-        this.toast.error(message);
-        console.error('Company register error:', err);
-      }
-    });
-  }
+      });
+    } else {
+      const payload: RegisterCompanyRequest = {
+        firstName: raw.firstName,
+        lastName: raw.lastName,
+        email: raw.email,
+        password: raw.password,
+        phoneNumber: raw.phoneNumber,
+        gender: raw.gender,
+        dateOfBirth: raw.dateOfBirth ? new Date(raw.dateOfBirth).toISOString() : undefined,
+        companyName: raw.companyName,
+        industry: raw.industry,
+        website: raw.website,
+        taxNumber: 'N/A' // Send N/A to satisfy backend if required
+      };
 
-  showPass(element: HTMLInputElement):void{
-
-    if(element.type === "password"){
-      element.type = 'text'
+      this.authService.registerCompany(payload).pipe(
+        finalize(() => this.isLoading = false)
+      ).subscribe({
+        next: (res) => {
+          if (res) {
+            this.toast.success('Company registered successfully! You are now the Administrator.');
+            this.router.navigate(['/recruiter/dashboard']);
+          }
+        },
+        error: (err) => {
+          const message = err?.error?.message || 'Company registration failed. Please review your data.';
+          this.toast.error(message);
+        }
+      });
     }
-    else{
-      element.type = 'password'
-    }
-
   }
 }

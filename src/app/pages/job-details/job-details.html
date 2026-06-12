@@ -104,8 +104,13 @@
             <span *ngIf="!isCheckingApplication()">Apply Now</span>
           </button>
 
-          <button class="bg-surface-container-low text-primary px-8 py-4 rounded-xl font-bold hover:bg-surface-container-high transition-colors">
-            Save Job
+          <button 
+            (click)="toggleSaveJob()"
+            [disabled]="isSavingJob()"
+            [class]="isJobSaved() ? 'bg-primary/10 text-primary' : 'bg-surface-container-low text-primary hover:bg-surface-container-high'"
+            class="px-8 py-4 rounded-xl font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined" [style.font-variation-settings]="isJobSaved() ? '\'FILL\' 1' : ''">bookmark</span>
+            {{ isJobSaved() ? 'Saved' : (isSavingJob() ? 'Saving...' : 'Save Job') }}
           </button>
         </div>
       </section>
@@ -185,6 +190,10 @@
                   <span class="text-outline">Posted</span>
                   <span class="font-semibold text-on-surface">{{ getPostedDate() }}</span>
                 </div>
+                <div class="flex justify-between text-xs">
+                  <span class="text-outline">Applicants</span>
+                  <span class="font-semibold text-on-surface">{{ job()?.applicantsCount != null ? job()?.applicantsCount : 0 }}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -234,6 +243,15 @@
 
     <!-- Modal Body -->
     <div class="px-8 py-6 space-y-6">
+
+      <!-- Informational Banner -->
+      <div class="bg-primary/10 border border-primary/20 rounded-xl p-4 flex items-start gap-3">
+        <span class="material-symbols-outlined text-primary mt-0.5">info</span>
+        <div class="text-sm text-on-surface">
+          <p class="font-bold mb-1">What gets shared?</p>
+          <p class="text-on-surface-variant">Your <a routerLink="/candidate/profile" class="text-primary hover:underline">IES Profile</a> details, AI Match Score, and the CV provided below will be sent securely to the employer.</p>
+        </div>
+      </div>
 
       <!-- CV Upload Zone -->
       <div>
@@ -332,7 +350,7 @@
           [disabled]="isApplying() || !cvFile()"
           class="flex-1 py-3.5 ai-gradient-btn text-white rounded-xl font-bold shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
         >
-          <span class="material-symbols-outlined text-lg" *ngIf="isApplying()">progress_activity</span>
+          <span class="material-symbols-outlined text-lg animate-spin" *ngIf="isApplying()">progress_activity</span>
           {{ isApplying() ? 'Submitting...' : 'Submit Application' }}
         </button>
       </div>

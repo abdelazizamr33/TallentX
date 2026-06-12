@@ -29,6 +29,9 @@ export class Navbar implements OnInit, OnDestroy {
 
   /** Controls the notification dropdown visibility */
   public notificationDropdownOpen = signal(false);
+  
+  /** Controls the profile dropdown visibility */
+  public profileDropdownOpen = signal(false);
 
   private navSub?: Subscription;
   private signalRSub?: Subscription;
@@ -41,8 +44,9 @@ export class Navbar implements OnInit, OnDestroy {
     this.navSub = this.router.events.subscribe((event) => {
       if (event instanceof NavigationEnd) {
         this.refreshUserUiState();
-        // Close dropdown on navigation
+        // Close dropdowns on navigation
         this.notificationDropdownOpen.set(false);
+        this.profileDropdownOpen.set(false);
       }
     });
 
@@ -68,6 +72,18 @@ export class Navbar implements OnInit, OnDestroy {
 
   closeNotificationDropdown(): void {
     this.notificationDropdownOpen.set(false);
+  }
+
+  toggleProfileDropdown(): void {
+    this.profileDropdownOpen.set(!this.profileDropdownOpen());
+    // Close notification dropdown if opening profile
+    if (this.profileDropdownOpen()) {
+      this.notificationDropdownOpen.set(false);
+    }
+  }
+
+  closeProfileDropdown(): void {
+    this.profileDropdownOpen.set(false);
   }
 
   markNotificationRead(id: number): void {
@@ -132,7 +148,7 @@ export class Navbar implements OnInit, OnDestroy {
     if (role === 'recruiter' || role === 'admin') {
       this.profileRoute = '/recruiter/dashboard';
     } else {
-      this.profileRoute = '/candidate/dashboard';
+      this.profileRoute = '/candidate/profile';
     }
 
     const email = localStorage.getItem('ies_email') || '';

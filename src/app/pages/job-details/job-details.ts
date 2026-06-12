@@ -300,7 +300,7 @@ export class JobDetails implements OnInit {
     }
 
     const currentJob = this.job();
-    if (!currentJob || this.isSavingJob() || this.isJobSaved()) return;
+    if (!currentJob || this.isSavingJob()) return;
 
     const jobId = Number(currentJob.id ?? currentJob.jobPostId);
     if (!Number.isFinite(jobId) || jobId <= 0) return;

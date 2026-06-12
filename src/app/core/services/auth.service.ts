@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { LoginRequest, RegisterRequest, RegisterCompanyRequest, RegisterRecruiterRequest, AuthResponse } from '../models/auth.models';
+import { LoginRequest, RegisterRequest, RegisterCompanyRequest, AuthResponse } from '../models/auth.models';
 import { CandidateService } from './candidate.service';
 
 @Injectable({ providedIn: 'root' })
@@ -50,7 +50,7 @@ export class AuthService {
     );
   }
 
-  /** POST /api/Auth/register — Candidate registration. */
+  /** Single registration endpoint; body must include userType per API contract. */
   register(data: RegisterRequest): Observable<AuthResponse> {
     const url = `${this.base}/Auth/register`;
     return this.http.post<AuthResponse>(url, data).pipe(
@@ -58,17 +58,8 @@ export class AuthService {
     );
   }
 
-  /** POST /api/Auth/register/company — Create a new company + admin recruiter. */
   registerCompany(data: RegisterCompanyRequest): Observable<AuthResponse> {
     const url = `${this.base}/Auth/register/company`;
-    return this.http.post<AuthResponse>(url, data).pipe(
-      tap(response => this.persistSession(response))
-    );
-  }
-
-  /** POST /api/Auth/register/recruiter — Join existing company via invite code. */
-  registerRecruiter(data: RegisterRecruiterRequest): Observable<AuthResponse> {
-    const url = `${this.base}/Auth/register/recruiter`;
     return this.http.post<AuthResponse>(url, data).pipe(
       tap(response => this.persistSession(response))
     );
@@ -156,13 +147,10 @@ export class AuthService {
       return;
     }
 
-    // Clear session immediately for faster UI response
-    this.clearSession();
-
-    this.http.post(`${this.base}/Auth/logout`, {}).subscribe({
-      error: () => {
-        // Silently ignore logout errors as session is already cleared locally
-      }
+    this.http.post(`${this.base}/Auth/logout`, {}).pipe(
+      tap(() => this.clearSession())
+    ).subscribe({
+      error: () => this.clearSession()
     });
   }
 
@@ -195,16 +183,7 @@ export class AuthService {
     return null;
   }
 
-  /**
-   * Extract primary role. API may return `roles` (array) or `role` (string).
-   * We store the first/primary role for guard checks.
-   */
   private extractRole(response: AuthResponse): string | null {
-    // Handle new API format: roles array
-    if (Array.isArray(response.roles) && response.roles.length > 0) {
-      return response.roles[0];
-    }
-    // Fallback: legacy single `role` field
     if (typeof response.role === 'string' && response.role.trim() !== '') {
       return response.role;
     }

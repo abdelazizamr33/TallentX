@@ -126,51 +126,12 @@
           ></div>
         </div>
 
-        <!-- ═══ Profile Dropdown ═══ -->
-        <div class="relative">
-          <button (click)="toggleProfileDropdown()" class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm cursor-pointer border border-primary/20 hover:bg-primary/20 transition-colors">
-            {{ userInitial }}
-          </button>
-          
-          <!-- Dropdown Panel -->
-          <div
-            *ngIf="profileDropdownOpen()"
-            class="absolute right-0 top-full mt-2 w-56 bg-surface-container-lowest dark:bg-surface-container rounded-2xl shadow-xl ring-1 ring-outline-variant/10 overflow-hidden z-50 notification-dropdown-enter"
-          >
-            <div class="py-2">
-              <a [routerLink]="profileRoute === '/candidate/profile' ? '/candidate/dashboard' : '/recruiter/dashboard'" (click)="closeProfileDropdown()" class="flex items-center gap-3 px-4 py-3 text-body-sm text-on-surface hover:bg-surface-container-low transition-colors">
-                <span class="material-symbols-outlined text-lg text-on-surface-variant">dashboard</span>
-                Dashboard
-              </a>
-              <a [routerLink]="profileRoute" (click)="closeProfileDropdown()" class="flex items-center gap-3 px-4 py-3 text-body-sm text-on-surface hover:bg-surface-container-low transition-colors">
-                <span class="material-symbols-outlined text-lg text-on-surface-variant">person</span>
-                Profile
-              </a>
-              <ng-container *ngIf="profileRoute === '/candidate/profile'">
-                <a routerLink="/candidate/applications" (click)="closeProfileDropdown()" class="flex items-center gap-3 px-4 py-3 text-body-sm text-on-surface hover:bg-surface-container-low transition-colors">
-                  <span class="material-symbols-outlined text-lg text-on-surface-variant">work_history</span>
-                  My Applications
-                </a>
-              </ng-container>
-              <div class="h-px bg-outline-variant/10 my-1"></div>
-              <a routerLink="/settings" (click)="closeProfileDropdown()" class="flex items-center gap-3 px-4 py-3 text-body-sm text-on-surface hover:bg-surface-container-low transition-colors">
-                <span class="material-symbols-outlined text-lg text-on-surface-variant">settings</span>
-                Settings
-              </a>
-              <button (click)="logout(); closeProfileDropdown()" class="w-full flex items-center gap-3 px-4 py-3 text-body-sm text-error hover:bg-error/10 transition-colors text-left">
-                <span class="material-symbols-outlined text-lg text-error">logout</span>
-                Logout
-              </button>
-            </div>
-          </div>
-          
-          <!-- Backdrop -->
-          <div
-            *ngIf="profileDropdownOpen()"
-            class="fixed inset-0 z-40"
-            (click)="closeProfileDropdown()"
-          ></div>
-        </div>
+        <a [routerLink]="profileRoute" class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm cursor-pointer border border-primary/20">
+          {{ userInitial }}
+        </a>
+        <button (click)="logout()" class="p-2 hover:bg-error-container text-error rounded-lg transition-all active:scale-95 duration-150 ease-in-out flex items-center justify-center" title="Logout">
+          <span class="material-symbols-outlined">logout</span>
+        </button>
       </ng-container>
 
       <button (click)="mobileMenuOpen = !mobileMenuOpen" class="md:hidden p-2 hover:bg-surface-container-low dark:hover:bg-surface-container-high rounded-lg transition-all active:scale-95 duration-150 ease-in-out text-on-surface-variant flex items-center justify-center">

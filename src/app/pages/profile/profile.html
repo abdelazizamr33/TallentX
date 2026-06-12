@@ -87,6 +87,11 @@
                 </div>
               </div>
               <div class="flex gap-2">
+                <label class="btn btn-primary btn-sm cursor-pointer whitespace-nowrap">
+                  <span *ngIf="!isUploadingResume">Replace</span>
+                  <span *ngIf="isUploadingResume"><i class="fa-solid fa-spinner fa-spin"></i></span>
+                  <input type="file" class="hidden" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" [disabled]="isUploadingResume" (change)="onUploadResume($event)" />
+                </label>
                 <button type="button" (click)="downloadResume()" class="btn btn-outline btn-sm">Download</button>
                 <button type="button" (click)="onDeleteResume()" [disabled]="isDeletingResume" class="btn btn-sm bg-error text-on-error hover:opacity-90">
                   <span *ngIf="!isDeletingResume">Remove</span>

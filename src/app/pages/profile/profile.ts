@@ -19,6 +19,7 @@ export class ProfilePage {
   isUpdatingSkills = false;
   isUploadingResume = false;
   isDeletingResume = false;
+  isDownloadingResume = false;
 
   newSkill = '';
 
@@ -106,38 +107,76 @@ export class ProfilePage {
 
   onDeleteResume(): void {
     if (confirm('Are you sure you want to delete your resume?')) {
-      this.isDeletingResume = true;
-      this.candidateService.getProfileDto().subscribe({
-        next: (profile) => {
-          const resumeId = profile?.resumes?.[0]?.id;
-          if (!resumeId) {
-            this.isDeletingResume = false;
-            this.toastService.error('No resume found to delete.');
-            return;
-          }
-
-          this.candidateService.deleteResume(String(resumeId)).subscribe({
-            next: () => {
+      setTimeout(() => {
+        this.isDeletingResume = true;
+        this.candidateService.getProfileDto().subscribe({
+          next: (profile) => {
+            const resumeId = profile?.resumes?.[0]?.id;
+            if (!resumeId) {
               this.isDeletingResume = false;
-              this.toastService.success('Resume deleted successfully!');
-            },
-            error: () => {
-              this.isDeletingResume = false;
-              this.toastService.error('Failed to delete resume.');
+              this.toastService.error('No resume found to delete.');
+              return;
             }
-          });
-        },
-        error: () => {
-          this.isDeletingResume = false;
-          this.toastService.error('Failed to load profile before deleting resume.');
-        }
+
+            this.candidateService.deleteResume(String(resumeId)).subscribe({
+              next: () => {
+                this.isDeletingResume = false;
+                this.toastService.success('Resume deleted successfully!');
+              },
+              error: (err) => {
+                this.isDeletingResume = false;
+                const errMsg = err.error?.message || 'Failed to delete resume.';
+                this.toastService.error(errMsg);
+              }
+            });
+          },
+          error: () => {
+            this.isDeletingResume = false;
+            this.toastService.error('Failed to load profile before deleting resume.');
+          }
+        });
       });
     }
   }
 
   downloadResume(): void {
-    this.toastService.success('Downloading resume...');
-    // Implement actual download logic here based on your backend response.
+    if (this.isDownloadingResume) return;
+    this.isDownloadingResume = true;
+    this.toastService.success('Starting download...');
+
+    this.candidateService.getProfileDto().subscribe({
+      next: (profile) => {
+        const resume = profile?.resumes?.[0];
+        if (!resume?.id) {
+          this.isDownloadingResume = false;
+          this.toastService.error('No resume found to download.');
+          return;
+        }
+
+        this.candidateService.downloadResume(String(resume.id)).subscribe({
+          next: (blob) => {
+            this.isDownloadingResume = false;
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = resume.originalFileName || 'resume';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            this.toastService.success('Resume downloaded successfully!');
+          },
+          error: () => {
+            this.isDownloadingResume = false;
+            this.toastService.error('Failed to download resume file.');
+          }
+        });
+      },
+      error: () => {
+        this.isDownloadingResume = false;
+        this.toastService.error('Failed to load profile details.');
+      }
+    });
   }
 }
 

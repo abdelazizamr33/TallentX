@@ -207,6 +207,12 @@ export class CandidateService {
     );
   }
 
+  downloadResume(resumeId: string): Observable<Blob> {
+    return this.http.get(`${this.base}/resume/${resumeId}`, {
+      responseType: 'blob'
+    });
+  }
+
   generateCv(resumeId: string): Observable<any> {
     return this.http.post(`${this.base}/resume/${resumeId}/generate-cv`, {});
   }

@@ -141,6 +141,11 @@ export class DashboardPage implements OnInit {
       return `${values[index] || 50}%`;
     }
 
+    getCompanyInitials(name?: string): string {
+      if (!name || name.trim().length === 0) return 'CO';
+      return name.trim().substring(0, 2).toUpperCase();
+    }
+
   onFileUpload(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {

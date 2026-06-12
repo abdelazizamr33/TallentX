@@ -71,6 +71,36 @@
         </div>
       </div>
 
+      <!-- Completed Candidates List -->
+      <div class="mt-8 space-y-6">
+        <h2 class="text-title-lg font-bold text-on-surface">Completed Candidates</h2>
+        
+        @if (isLoadingCandidates()) {
+          <div class="space-y-4">
+            <div *ngFor="let i of [1,2]" class="animate-pulse rounded-2xl bg-surface-container p-5 h-24"></div>
+          </div>
+        } @else if (candidates().length > 0) {
+          <div class="space-y-4">
+            @for (candidate of candidates(); track candidate.candidateId) {
+              <app-candidate-card
+                [candidateId]="candidate.candidateId"
+                [name]="candidate.fullName"
+                [score]="candidate.score"
+                [maxScore]="assessment()?.totalScore || 100"
+                [status]="candidate.status"
+                dateLabel="Submitted"
+                [dateValue]="candidate.submissionDate"
+                [routerLink]="['candidates', candidate.candidateId]"
+              ></app-candidate-card>
+            }
+          </div>
+        } @else {
+          <div class="rounded-xl border border-dashed border-outline-variant/40 p-8 text-center bg-surface-container/50">
+            <p class="text-body-md text-on-surface-variant">No candidates have completed this assessment yet.</p>
+          </div>
+        }
+      </div>
+
       <!-- Questions List -->
       @if (assessment()?.questions && assessment()!.questions!.length > 0) {
         <div class="mt-8 space-y-6">

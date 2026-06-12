@@ -120,8 +120,11 @@ export class MessagesPage implements OnInit {
       return;
     }
 
-    this.recruiterService.getRecruiterInterviews(1, 100).subscribe({
-      next: (interviews) => this.interviewsCount.set(interviews.length),
+    this.recruiterService.getRecruiterInterviews('Scheduled', 1, 100).subscribe({
+      next: (res) => {
+        const items = res.items || res || [];
+        this.interviewsCount.set(items.length);
+      },
       error: () => this.interviewsCount.set(0)
     });
   }

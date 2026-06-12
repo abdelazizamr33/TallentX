@@ -61,10 +61,10 @@ export class RecruiterService {
 
     return this.getDashboard(companyId).pipe(
       map((res: any) => ({
-        activeJobs: Number(res?.activeJobs ?? res?.totalJobs ?? 0),
-        totalApplicants: Number(res?.totalApplicants ?? 0),
-        interviewsScheduled: Number(res?.interviewsScheduled ?? 0),
-        unreadMessages: Number(res?.unreadMessages ?? 0)
+        activeJobs: Number(res?.activeJobsCount ?? res?.activeJobs ?? res?.totalJobs ?? 0),
+        totalApplicants: Number(res?.totalApplicantsCount ?? res?.totalApplicants ?? 0),
+        interviewsScheduled: Number(res?.pendingInterviewsCount ?? res?.interviewsScheduled ?? 0),
+        unreadMessages: Number(res?.unreadNotificationsCount ?? res?.unreadMessages ?? 0)
       })),
       catchError(() => of({ activeJobs: 0, totalApplicants: 0, interviewsScheduled: 0, unreadMessages: 0 }))
     );
@@ -168,9 +168,13 @@ export class RecruiterService {
   }
 
   // 3. Applicant Management
-  getJobApplicants(jobPostId: number, pageNumber = 1, pageSize = 20): Observable<JobApplicationDto[]> {
+  getJobApplicants(jobPostId: number, pageNumber = 1, pageSize = 20): Observable<any> {
     let params = new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize);
-    return this.http.get<JobApplicationDto[]>(`${this.jobAppUrl}/job/${jobPostId}`, { params });
+    return this.http.get<any>(`${this.jobAppUrl}/job/${jobPostId}`, { params });
+  }
+
+  getCandidateProfileForRecruiter(candidateId: string): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/Candidates/recruiter/profile/${candidateId}`);
   }
 
   getAllApplicants(): Observable<JobApplicationDto[]> {
@@ -249,9 +253,20 @@ export class RecruiterService {
   }
 
   // 4. Interviews
-  getRecruiterInterviews(pageNumber = 1, pageSize = 20): Observable<InterviewDto[]> {
+  getRecruiterInterviews(status?: string, pageNumber = 1, pageSize = 20): Observable<any> {
     let params = new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize);
-    return this.http.get<InterviewDto[]>(`${this.interviewUrl}/recruiter/interviews`, { params });
+    if (status) {
+      params = params.set('status', status);
+    }
+    return this.http.get<any>(`${this.interviewUrl}/recruiter/interviews`, { params });
+  }
+
+  getInterviewDetailsForRecruiter(id: number): Observable<any> {
+    return this.http.get<any>(`${this.interviewUrl}/recruiter/${id}`);
+  }
+
+  evaluateInterview(id: number, rating: number, feedbackComments: string): Observable<any> {
+    return this.http.put(`${this.interviewUrl}/${id}/evaluate`, { rating, feedbackComments });
   }
 
   scheduleInterview(data: ScheduleInterviewRequest): Observable<InterviewDto> {

@@ -2,15 +2,16 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { AssessmentService } from '../../core/services/assessment.service';
-import { AssessmentDetailDto } from '../../core/models/assessment.models';
+import { AssessmentDetailDto, AssessmentCandidateListDto } from '../../core/models/assessment.models';
 import { RecruiterService, RecruiterJob } from '../../core/services/recruiter';
+import { CandidateCardComponent } from '../../components/candidate-card/candidate-card';
 import { ToastService } from '../../core/services/toast.service';
 import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-assessment-details',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, CandidateCardComponent],
   templateUrl: './assessment-details.html',
 })
 export class AssessmentDetailsPage implements OnInit {
@@ -21,7 +22,9 @@ export class AssessmentDetailsPage implements OnInit {
 
   readonly assessment = signal<AssessmentDetailDto | null>(null);
   readonly jobs = signal<RecruiterJob[]>([]);
+  readonly candidates = signal<AssessmentCandidateListDto[]>([]);
   readonly isLoading = signal(true);
+  readonly isLoadingCandidates = signal(false);
 
   ngOnInit() {
     this.recruiterService.getJobPostings().subscribe({
@@ -32,7 +35,9 @@ export class AssessmentDetailsPage implements OnInit {
     this.route.paramMap.subscribe(params => {
       const idStr = params.get('id');
       if (idStr) {
-        this.loadAssessment(Number(idStr));
+        const id = Number(idStr);
+        this.loadAssessment(id);
+        this.loadCandidates(id);
       }
     });
   }
@@ -74,6 +79,21 @@ export class AssessmentDetailsPage implements OnInit {
         },
         error: (err) => {
           this.toast.error('Failed to load assessment details.');
+        }
+      });
+  }
+
+  loadCandidates(id: number) {
+    this.isLoadingCandidates.set(true);
+    this.assessmentService.getAssessmentCandidates(id)
+      .pipe(finalize(() => this.isLoadingCandidates.set(false)))
+      .subscribe({
+        next: (res) => {
+          this.candidates.set(res.items || []);
+        },
+        error: () => {
+          this.candidates.set([]);
+          this.toast.error('Failed to load completed candidates.');
         }
       });
   }

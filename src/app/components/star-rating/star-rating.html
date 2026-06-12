@@ -1,0 +1,25 @@
+<div class="flex items-center gap-1">
+  <button
+    *ngFor="let star of stars; let i = index"
+    type="button"
+    class="bg-transparent border-none p-1 transition-transform"
+    [ngClass]="{
+      'cursor-pointer hover:scale-110': !readOnly && !disabled,
+      'cursor-default opacity-60': disabled,
+      'cursor-default': readOnly
+    }"
+    (click)="setRating(star)"
+    (mouseenter)="setHover(star)"
+    (mouseleave)="clearHover()"
+    [disabled]="disabled"
+    [title]="star + ' Stars'"
+  >
+    <i 
+      class="fa-star text-2xl"
+      [ngClass]="{
+        'fa-solid text-warning': (hoverRating ? star <= hoverRating : star <= rating),
+        'fa-regular text-outline-variant': !(hoverRating ? star <= hoverRating : star <= rating)
+      }"
+    ></i>
+  </button>
+</div>

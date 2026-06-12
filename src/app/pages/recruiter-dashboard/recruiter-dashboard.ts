@@ -85,13 +85,14 @@ export class RecruiterDashboard implements OnInit {
       stats: this.recruiterService.getDashboardStats().pipe(catchError(() => of(null))),
       jobs: this.recruiterService.getJobPostings().pipe(catchError(() => of([]))),
       applicants: this.recruiterService.getApplicants().pipe(catchError(() => of([]))),
-      interviews: this.recruiterService.getRecruiterInterviews(1, 5).pipe(catchError(() => of([])))
+      interviews: this.recruiterService.getRecruiterInterviews('Scheduled', 1, 5).pipe(catchError(() => of([])))
     }).subscribe(result => {
       if (result.stats) this.stats.set(result.stats);
       this.recentJobs.set(result.jobs.slice(0, 3)); // show top 3
       this.recentApplicants.set(result.applicants.slice(0, 5)); // show top 5
+      const interviews = Array.isArray(result.interviews) ? result.interviews : (result.interviews?.items || []);
       this.upcomingInterviews.set(
-        [...result.interviews]
+        [...interviews]
           .sort((a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime())
           .slice(0, 3)
       );

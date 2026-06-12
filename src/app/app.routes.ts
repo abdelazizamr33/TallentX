@@ -113,6 +113,16 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/interview-scheduling/interview-scheduling').then(m => m.InterviewSchedulingPage),
       },
       {
+        path: 'recruiter/interviews/:id',
+        canActivate: [recruiterGuard],
+        loadComponent: () => import('./pages/interview-details/interview-details').then(m => m.InterviewDetailsPage),
+      },
+      {
+        path: 'recruiter/candidates/:id',
+        canActivate: [recruiterGuard],
+        loadComponent: () => import('./pages/candidate-profile/candidate-profile').then(m => m.CandidateProfilePage),
+      },
+      {
         path: 'recruiter/assessments',
         canActivate: [recruiterGuard],
         loadComponent: () => import('./pages/recruiter-assessments/recruiter-assessments').then(m => m.RecruiterAssessmentsPage),
@@ -126,6 +136,11 @@ export const routes: Routes = [
         path: 'recruiter/assessments/:id',
         canActivate: [recruiterGuard],
         loadComponent: () => import('./pages/assessment-details/assessment-details').then(m => m.AssessmentDetailsPage),
+      },
+      {
+        path: 'recruiter/assessments/:assessmentId/candidates/:candidateId',
+        canActivate: [recruiterGuard],
+        loadComponent: () => import('./pages/candidate-assessment-result/candidate-assessment-result').then(m => m.CandidateAssessmentResultPage),
       },
       {
         path: 'company/settings',

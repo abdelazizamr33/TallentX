@@ -1,0 +1,150 @@
+<div class="min-h-screen rounded-4xl bg-surface-container-lowest p-6 md:p-8">
+  <div class="mx-auto max-w-5xl space-y-7">
+    
+    <!-- Back Navigation -->
+    <a routerLink="/recruiter/jobs" class="inline-flex items-center gap-2 text-label-md font-semibold text-primary hover:underline">
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      </svg>
+      Back to Jobs
+    </a>
+
+    @if (isLoading()) {
+      <div class="space-y-8">
+        <div class="animate-pulse rounded-[2rem] bg-surface-container p-8 h-40"></div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div class="animate-pulse rounded-[2rem] bg-surface-container p-6 h-64 md:col-span-1"></div>
+          <div class="animate-pulse rounded-[2rem] bg-surface-container p-6 h-96 md:col-span-2"></div>
+        </div>
+      </div>
+    } @else if (profile()) {
+      
+      <!-- Hero Header -->
+      <div class="rounded-[2rem] bg-surface-container-lowest p-8 shadow-sm ring-1 ring-outline-variant/30 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">
+        <!-- Background decorative element -->
+        <div class="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none"></div>
+
+        <div class="w-32 h-32 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center text-5xl font-bold shadow-md z-10">
+          <img *ngIf="profile()?.profilePictureUrl" [src]="profile()?.profilePictureUrl" alt="Profile" class="w-full h-full object-cover rounded-full">
+          <span *ngIf="!profile()?.profilePictureUrl">{{ profile()?.fullName ? profile()!.fullName.charAt(0).toUpperCase() : '?' }}</span>
+        </div>
+        
+        <div class="flex-1 text-center md:text-left z-10">
+          <h1 class="text-display-md font-extrabold text-on-surface tracking-tight">{{ profile()?.fullName }}</h1>
+          <p class="text-title-md text-primary font-medium mt-1">{{ profile()?.headline || 'Candidate' }}</p>
+          
+          <div class="mt-4 flex flex-wrap justify-center md:justify-start gap-x-6 gap-y-3 text-body-md text-on-surface-variant">
+            <span class="flex items-center gap-2 bg-surface-container px-3 py-1.5 rounded-lg border border-outline-variant/20">
+              <i class="fa-regular fa-envelope text-primary"></i> {{ profile()?.email }}
+            </span>
+            <span *ngIf="profile()?.phoneNumber" class="flex items-center gap-2 bg-surface-container px-3 py-1.5 rounded-lg border border-outline-variant/20">
+              <i class="fa-solid fa-phone text-primary"></i> {{ profile()?.phoneNumber }}
+            </span>
+            <span *ngIf="profile()?.location" class="flex items-center gap-2 bg-surface-container px-3 py-1.5 rounded-lg border border-outline-variant/20">
+              <i class="fa-solid fa-location-dot text-primary"></i> {{ profile()?.location }}
+            </span>
+          </div>
+        </div>
+        
+        <div class="mt-6 md:mt-0 z-10">
+          <button 
+            (click)="viewResume(profile()?.resumeUrl)"
+            class="ai-gradient-btn text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-indigo-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+          >
+            <i class="fa-regular fa-file-pdf text-lg"></i>
+            View Resume
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+        <!-- Sidebar -->
+        <div class="lg:col-span-1 space-y-8">
+          
+          <!-- Skills -->
+          <div class="rounded-[2rem] bg-surface-container-lowest p-6 shadow-sm ring-1 ring-outline-variant/30">
+            <h3 class="text-title-lg font-bold text-on-surface flex items-center gap-2 mb-4">
+              <i class="fa-solid fa-star text-tertiary"></i> Skills
+            </h3>
+            
+            <div *ngIf="profile()?.skills?.length; else noSkills" class="flex flex-wrap gap-2">
+              <span *ngFor="let skill of profile().skills" class="px-3 py-1.5 bg-primary/10 text-primary border border-primary/20 rounded-lg text-label-sm font-bold">
+                {{ typeof skill === 'string' ? skill : skill.name }}
+              </span>
+            </div>
+            <ng-template #noSkills>
+              <p class="text-body-sm text-on-surface-variant italic">No skills listed.</p>
+            </ng-template>
+          </div>
+          
+          <!-- Education Summary (if we have basic details) -->
+          <div *ngIf="profile()?.education && profile().education.length > 0" class="rounded-[2rem] bg-surface-container-lowest p-6 shadow-sm ring-1 ring-outline-variant/30">
+            <h3 class="text-title-lg font-bold text-on-surface flex items-center gap-2 mb-4">
+              <i class="fa-solid fa-graduation-cap text-secondary"></i> Education
+            </h3>
+            <div class="space-y-4">
+              <div *ngFor="let edu of profile().education" class="border-l-2 border-outline-variant pl-4">
+                <h4 class="font-bold text-on-surface">{{ edu.degree }}</h4>
+                <p class="text-body-sm text-on-surface-variant">{{ edu.institution }}</p>
+                <p class="text-label-sm text-outline mt-1">{{ edu.graduationYear || (edu.startDate | date:'y') + ' - ' + (edu.endDate ? (edu.endDate | date:'y') : 'Present') }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="lg:col-span-2 space-y-8">
+          
+          <!-- About/Summary -->
+          <div *ngIf="profile()?.summary" class="rounded-[2rem] bg-surface-container-lowest p-8 shadow-sm ring-1 ring-outline-variant/30">
+            <h3 class="text-title-lg font-bold text-on-surface flex items-center gap-2 mb-4">
+              <i class="fa-regular fa-user text-primary"></i> Professional Summary
+            </h3>
+            <p class="text-body-md text-on-surface-variant leading-relaxed whitespace-pre-line">{{ profile().summary }}</p>
+          </div>
+          
+          <!-- Experience -->
+          <div *ngIf="profile()?.experience && profile().experience.length > 0" class="rounded-[2rem] bg-surface-container-lowest p-8 shadow-sm ring-1 ring-outline-variant/30">
+            <h3 class="text-title-lg font-bold text-on-surface flex items-center gap-2 mb-6">
+              <i class="fa-solid fa-briefcase text-primary"></i> Work Experience
+            </h3>
+            
+            <div class="space-y-8 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:ml-[8.5rem] md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-outline-variant/30 before:to-transparent">
+              
+              <div *ngFor="let exp of profile().experience" class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                <!-- Icon -->
+                <div class="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-surface-container-lowest text-primary shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">
+                  <i class="fa-solid fa-building text-sm"></i>
+                </div>
+                
+                <!-- Content -->
+                <div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-surface-container-low p-5 rounded-2xl border border-outline-variant/20 shadow-sm transition-transform hover:-translate-y-1">
+                  <div class="flex flex-col mb-1">
+                    <span class="text-label-sm text-primary font-bold tracking-wider uppercase">{{ exp.startDate | date:'MMM yyyy' }} - {{ exp.endDate ? (exp.endDate | date:'MMM yyyy') : 'Present' }}</span>
+                    <h4 class="text-title-md font-bold text-on-surface mt-1">{{ exp.jobTitle || exp.title }}</h4>
+                  </div>
+                  <div class="text-body-sm font-semibold text-on-surface-variant mb-3">{{ exp.companyName || exp.company }}</div>
+                  <p class="text-body-sm text-on-surface-variant leading-relaxed line-clamp-3 hover:line-clamp-none transition-all">{{ exp.description }}</p>
+                </div>
+              </div>
+              
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    } @else {
+      <div class="flex flex-col items-center justify-center rounded-[2rem] bg-surface-container px-6 py-16 text-center ring-1 ring-outline-variant/20">
+        <div class="flex h-20 w-20 items-center justify-center rounded-3xl bg-surface-variant/30 text-on-surface-variant shadow-inner">
+          <span class="material-symbols-outlined text-4xl">person_off</span>
+        </div>
+        <h3 class="mt-6 text-headline-sm font-bold text-on-surface">Candidate Profile Not Found</h3>
+        <p class="mt-3 text-body-md text-on-surface-variant max-w-md">We couldn't load the details for this candidate. They may have restricted their profile visibility or the link might be broken.</p>
+        <button routerLink="/recruiter/jobs" class="mt-8 bg-surface-container-highest px-6 py-3 rounded-xl text-on-surface font-semibold hover:bg-outline-variant/20 transition-colors">
+          Return to Jobs
+        </button>
+      </div>
+    }
+  </div>
+</div>

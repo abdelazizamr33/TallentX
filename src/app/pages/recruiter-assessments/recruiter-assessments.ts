@@ -151,6 +151,7 @@ export class RecruiterAssessmentsPage implements OnInit {
       description: val.description || '',
       type: 0, // Technical AssessmentType
       timeLimitMinutes: Number(val.timeLimitMinutes),
+      passingScore: Number(val.passingScore),
       questions,
     };
 

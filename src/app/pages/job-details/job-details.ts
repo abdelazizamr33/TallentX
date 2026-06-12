@@ -4,11 +4,13 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
 import { JobService } from '../../core/services/job';
+import { RecruiterService } from '../../core/services/recruiter';
 import { CandidateService } from '../../core/services/candidate.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { JobModel } from '../../core/models/candidate.models';
 import { jobListDtoToJobModel } from '../../core/utils/job.mapper';
+import { CandidateCardComponent } from '../../components/candidate-card/candidate-card';
 
 /** Allowed MIME types for CV upload */
 const ALLOWED_TYPES = [
@@ -23,7 +25,7 @@ const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 @Component({
   selector: 'app-job-details',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CandidateCardComponent],
   templateUrl: './job-details.html',
   styleUrls: ['./job-details.css']
 })
@@ -31,6 +33,7 @@ export class JobDetails implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private jobService = inject(JobService);
+  private recruiterService = inject(RecruiterService);
   private candidateService = inject(CandidateService);
   private authService = inject(AuthService);
   private toastService = inject(ToastService);
@@ -43,6 +46,8 @@ export class JobDetails implements OnInit {
   readonly isJobSaved = signal(false);
   readonly isSavingJob = signal(false);
   readonly isRecruiterUser = signal(false);
+  readonly applicants = signal<any[]>([]);
+  readonly isLoadingApplicants = signal(false);
 
   // ─── Apply Modal State ───
   readonly showApplyModal = signal(false);
@@ -73,6 +78,10 @@ export class JobDetails implements OnInit {
           const role = this.authService.getRole()?.toLowerCase() || '';
           if (role.includes('recruiter') || role.includes('admin')) {
              this.isRecruiterUser.set(true);
+             const jobId = Number(model?.id ?? model?.jobPostId ?? 0);
+             if (jobId) {
+               this.loadApplicants(jobId);
+             }
           } else if (role === 'candidate') {
             const jobId = Number(model?.id ?? model?.jobPostId ?? 0);
             this.checkIfApplied(jobId);
@@ -385,5 +394,20 @@ export class JobDetails implements OnInit {
     } catch {
       return 'Unknown';
     }
+  }
+
+  // ─── Recruiter Features ───
+  private loadApplicants(jobId: number): void {
+    this.isLoadingApplicants.set(true);
+    this.recruiterService.getJobApplicants(jobId, 1, 100)
+      .pipe(finalize(() => this.isLoadingApplicants.set(false)))
+      .subscribe({
+        next: (res: any) => {
+          this.applicants.set(res.items || res || []);
+        },
+        error: () => {
+          this.toastService.error('Failed to load job applicants.');
+        }
+      });
   }
 }

@@ -36,3 +36,38 @@ export interface CandidateAssessmentDto {
   isCompleted: boolean;
   assessment: AssessmentDetailDto;
 }
+
+export interface AssessmentCandidateListDto {
+  candidateId: string;
+  fullName: string;
+  email: string;
+  score?: number;
+  status: string;
+  submissionDate?: string;
+}
+
+export interface QuestionAnswerDto {
+  questionId: number;
+  questionText: string;
+  questionType: string;
+  candidateAnswer?: string;
+  correctAnswer?: string;
+  isCorrect: boolean;
+  points: number;
+}
+
+export interface AssessmentCandidateDetailDto {
+  candidateId: string;
+  fullName: string;
+  email: string;
+  phoneNumber?: string;
+  resumeUrl?: string;
+
+  assessmentId: number;
+  assessmentName: string;
+  totalScore: number;
+  maximumScore: number;
+  submissionDate?: string;
+
+  questions: QuestionAnswerDto[];
+}

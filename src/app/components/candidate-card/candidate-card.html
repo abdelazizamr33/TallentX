@@ -1,0 +1,41 @@
+<div 
+  class="bg-surface-container-lowest border border-gray-300 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-primary/30 hover:bg-primary/5 cursor-pointer transition-all flex flex-col md:flex-row gap-4 justify-between"
+  (click)="onClick()"
+>
+  <div class="flex items-center gap-4">
+    <div class="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant font-bold text-lg shrink-0">
+      {{ name ? name.charAt(0).toUpperCase() : '?' }}
+    </div>
+    <div>
+      <h3 class="text-title-md font-bold text-on-surface">{{ name }}</h3>
+      <div class="text-sm text-on-surface-variant flex flex-wrap gap-x-4 mt-1">
+        <span *ngIf="dateValue"><i class="fa-regular fa-calendar mr-1.5 opacity-70"></i>{{ dateLabel }}: {{ dateValue | date:'mediumDate' }}</span>
+        <span class="font-mono text-xs opacity-60">ID: {{ candidateId | slice:0:8 }}...</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex flex-row md:flex-col items-center justify-between md:items-end gap-2 pt-2 md:pt-0">
+    <div *ngIf="score !== undefined && score !== null" class="flex flex-col items-end">
+      <div class="text-xs text-on-surface-variant uppercase tracking-wider font-semibold">Score</div>
+      <div class="text-title-lg font-bold" [ngClass]="{'text-success': score >= (maxScore ? maxScore * 0.7 : 70), 'text-error': score < (maxScore ? maxScore * 0.7 : 70)}">
+        {{ score }}<span class="text-body-sm text-on-surface-variant font-normal ml-1" *ngIf="maxScore">/ {{ maxScore }}</span>
+      </div>
+    </div>
+
+    <div *ngIf="status" class="mt-auto">
+      <span 
+        class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider border"
+        [ngClass]="{
+          'bg-success-container/20 text-success border-success/30': status.toLowerCase() === 'completed' || status.toLowerCase() === 'accepted' || status.toLowerCase() === 'offered',
+          'bg-warning-container/20 text-warning border-warning/30': status.toLowerCase() === 'in progress' || status.toLowerCase() === 'interviewing',
+          'bg-primary-container/20 text-primary border-primary/30': status.toLowerCase() === 'new' || status.toLowerCase() === 'pending' || status.toLowerCase() === 'submitted',
+          'bg-error-container/20 text-error border-error/30': status.toLowerCase() === 'rejected' || status.toLowerCase() === 'failed',
+          'bg-surface-container text-on-surface-variant border-outline-variant/30': !['completed', 'accepted', 'offered', 'in progress', 'interviewing', 'new', 'pending', 'submitted', 'rejected', 'failed'].includes(status.toLowerCase())
+        }"
+      >
+        {{ status }}
+      </span>
+    </div>
+  </div>
+</div>

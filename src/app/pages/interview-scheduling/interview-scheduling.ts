@@ -6,7 +6,7 @@ import { finalize } from 'rxjs/operators';
 import { InterviewService } from '../../core/services/interview.service';
 import { InterviewDto } from '../../core/models/interview.models';
 import { ToastService } from '../../core/services/toast.service';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { JobApplicationDto } from '../../core/models/job.models';
 export type InterviewType = 'Online' | 'On-site' | 'Technical' | 'HR';
 export type InterviewDisplayStatus = 'Scheduled' | 'Confirmed' | 'Pending' | 'Rescheduled' | 'Cancelled' | 'Completed';
@@ -40,10 +40,12 @@ interface InterviewJobOption {
   title: string;
 }
 
+import { InterviewCardComponent } from '../../components/interview-card/interview-card';
+
 @Component({
   selector: 'app-interview-scheduling-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, InterviewCardComponent],
   templateUrl: './interview-scheduling.html',
 })
 export class InterviewSchedulingPage implements OnInit {
@@ -56,7 +58,10 @@ export class InterviewSchedulingPage implements OnInit {
   readonly interviews = signal<UpcomingInterviewItem[]>([]);
   readonly isLoading = signal<boolean>(true);
   readonly isLoadingApplications = signal<boolean>(true);
+  readonly isLoadingCompleted = signal<boolean>(false);
   readonly isSubmitting = signal<boolean>(false);
+  readonly activeTab = signal<'upcoming' | 'completed'>('upcoming');
+  readonly completedInterviews = signal<any[]>([]);
   readonly expandedId = signal<number | null>(null);
   readonly editingId = signal<number | null>(null);
   readonly availableJobs = signal<InterviewJobOption[]>([]);
@@ -115,6 +120,7 @@ export class InterviewSchedulingPage implements OnInit {
 
   ngOnInit(): void {
     this.loadInterviews();
+    this.loadCompletedInterviews();
     this.loadAvailableApplications();
 
     this.interviewForm.controls.jobId.valueChanges.subscribe(jobId => {
@@ -147,6 +153,25 @@ export class InterviewSchedulingPage implements OnInit {
           this.toast.error('Failed to load interviews.');
         },
       });
+  }
+
+  loadCompletedInterviews(): void {
+    this.isLoadingCompleted.set(true);
+    this.recruiterService.getRecruiterInterviews('Completed', 1, 50)
+      .pipe(finalize(() => this.isLoadingCompleted.set(false)))
+      .subscribe({
+        next: (res) => {
+          this.completedInterviews.set(res.items || []);
+        },
+        error: () => this.toast.error('Failed to load completed interviews.')
+      });
+  }
+
+  switchTab(tab: 'upcoming' | 'completed'): void {
+    this.activeTab.set(tab);
+    if (tab === 'completed' && this.completedInterviews().length === 0) {
+      this.loadCompletedInterviews();
+    }
   }
 
 

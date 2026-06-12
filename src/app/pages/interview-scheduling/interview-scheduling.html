@@ -1,7 +1,6 @@
 <div class="min-h-screen rounded-4xl bg-surface-container-lowest p-6 md:p-8">
   <div class="mx-auto max-w-7xl space-y-6">
     <header>
-      <p class="text-label-md uppercase tracking-widest text-secondary">Coordination</p>
       <h1 class="mt-1 text-display-sm text-on-surface">Interview Scheduling</h1>
       <p class="mt-1 text-body-md text-on-surface-variant">Schedule and manage interviews for active candidates.</p>
     </header>
@@ -77,14 +76,30 @@
 
       <article
         class="rounded-3xl border border-gray-300 bg-surface-container-lowest p-5 shadow-sm ring-1 ring-outline-variant/30 xl:col-span-8">
-        <div class="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h2 class="text-title-lg text-on-surface">Upcoming Interviews</h2>
-            <p class="mt-1 text-body-sm text-on-surface-variant" *ngIf="!isLoading() && hasUpcoming()">
-              {{ upcoming().length }} scheduled sessions
-            </p>
+        <div class="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between border-b border-outline-variant/30 pb-4">
+          <div class="flex gap-6">
+            <button
+              (click)="switchTab('upcoming')"
+              class="pb-4 relative font-bold text-title-md transition-colors"
+              [class.text-primary]="activeTab() === 'upcoming'"
+              [class.text-on-surface-variant]="activeTab() !== 'upcoming'"
+            >
+              Upcoming Interviews
+              <div *ngIf="activeTab() === 'upcoming'" class="absolute bottom-[-1px] left-0 right-0 h-1 bg-primary rounded-t-full"></div>
+            </button>
+            <button
+              (click)="switchTab('completed')"
+              class="pb-4 relative font-bold text-title-md transition-colors"
+              [class.text-primary]="activeTab() === 'completed'"
+              [class.text-on-surface-variant]="activeTab() !== 'completed'"
+            >
+              Completed
+              <div *ngIf="activeTab() === 'completed'" class="absolute bottom-[-1px] left-0 right-0 h-1 bg-primary rounded-t-full"></div>
+            </button>
           </div>
         </div>
+
+        <ng-container *ngIf="activeTab() === 'upcoming'">
 
         <div *ngIf="isLoading()" class="mt-4 space-y-3">
           <div *ngFor="let i of [1,2,3,4]" class="rounded-2xl bg-surface-container p-4 animate-pulse">
@@ -199,6 +214,37 @@
             </div>
           </section>
         </div>
+        </ng-container>
+
+        <ng-container *ngIf="activeTab() === 'completed'">
+          <div *ngIf="isLoadingCompleted()" class="mt-6 space-y-3">
+            <div *ngFor="let i of [1,2,3]" class="rounded-2xl bg-surface-container p-4 animate-pulse h-24"></div>
+          </div>
+          
+          <div *ngIf="!isLoadingCompleted() && completedInterviews().length === 0"
+            class="mt-6 rounded-2xl border border-dashed border-outline-variant/40 bg-surface-container p-10 text-center">
+            <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-variant/30 text-on-surface-variant">
+              <span class="material-symbols-outlined text-3xl">inbox</span>
+            </div>
+            <h3 class="text-title-md text-on-surface">No completed interviews</h3>
+            <p class="mt-2 text-body-sm text-on-surface-variant max-w-md mx-auto">
+              You haven't completed any interviews yet.
+            </p>
+          </div>
+
+          <div *ngIf="!isLoadingCompleted() && completedInterviews().length > 0" class="mt-6 space-y-4">
+            @for (interview of completedInterviews(); track interview.interviewId) {
+              <app-interview-card
+                [interviewId]="interview.interviewId"
+                [candidateName]="interview.fullName"
+                [interviewType]="interview.interviewType"
+                [date]="interview.scheduledAt"
+                [status]="interview.status"
+                [routerLink]="['/recruiter/interviews', interview.interviewId]"
+              ></app-interview-card>
+            }
+          </div>
+        </ng-container>
       </article>
     </section>
   </div>

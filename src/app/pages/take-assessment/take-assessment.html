@@ -1,116 +1,97 @@
-﻿<div class="min-h-screen bg-surface-container-lowest p-6 md:p-8">
+<div class="min-h-screen bg-surface-container-lowest p-6 md:p-8">
   <div class="mx-auto max-w-6xl space-y-7">
     <header class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
       <div>
         <p class="text-label-md uppercase tracking-widest text-tertiary">Skill Verification</p>
-        <h1 class="mt-1 text-display-sm text-on-surface">Take Assessment</h1>
+        <h1 class="mt-1 text-display-sm text-on-surface">My Assessments</h1>
         <p class="mt-2 text-body-md text-on-surface-variant">Complete AI-driven technical evaluations to boost your employer match score.</p>
       </div>
       <div class="flex gap-2">
-        <button class="rounded-xl bg-surface-container px-4 py-2 text-label-md text-on-surface">History</button>
-        <button class="rounded-xl bg-primary px-4 py-2 text-label-md text-on-primary">Browse tests</button>
+        <a routerLink="/candidate/interviews" class="rounded-xl bg-surface-container px-4 py-2 text-label-md text-on-surface hover:bg-surface-container-high transition-colors">Interviews</a>
       </div>
     </header>
 
-    <div class="grid grid-cols-1 gap-6 xl:grid-cols-12">
+    <div *ngIf="isLoading()" class="space-y-4">
+      <div *ngFor="let i of [1,2]" class="rounded-3xl bg-surface-container p-6 animate-pulse">
+        <div class="h-6 w-1/3 rounded bg-surface-variant"></div>
+        <div class="mt-4 h-4 w-1/2 rounded bg-surface-variant"></div>
+      </div>
+    </div>
+
+    <div *ngIf="!isLoading()" class="grid grid-cols-1 gap-6 xl:grid-cols-12">
       <section class="space-y-5 xl:col-span-8">
+        <!-- Pending Assessments -->
         <div class="mb-4 flex items-center justify-between rounded-xl bg-secondary-container p-4 text-on-secondary-container">
           <div class="flex items-center gap-3">
             <i class="fa-solid fa-flag-checkered"></i>
             <span class="text-title-md">Pending Assessments</span>
           </div>
-          <span class="rounded-full bg-surface-container-highest px-2 py-0.5 text-label-sm">1 Required</span>
+          <span class="rounded-full bg-surface-container-highest px-2 py-0.5 text-label-sm">{{ pendingAssessments().length }} Required</span>
         </div>
 
-        <article class="flex flex-col gap-5 rounded-3xl bg-surface-container-lowest p-6 shadow-md ring-2 ring-primary/20 md:flex-row md:items-center">
+        <article *ngFor="let ca of pendingAssessments()" class="flex flex-col gap-5 rounded-3xl bg-surface-container-lowest p-6 shadow-md ring-2 ring-primary/20 md:flex-row md:items-center transition hover:-translate-y-1 hover:shadow-lg">
           <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary-container text-on-primary-container">
-            <i class="fa-brands fa-angular text-2xl"></i>
+            <i class="fa-solid fa-laptop-code text-2xl"></i>
           </div>
           <div class="flex-1 space-y-2">
             <div class="flex items-start justify-between">
-              <h3 class="text-title-lg text-on-surface">Angular State Management</h3>
-              <span class="rounded-full bg-error-container px-2 py-1 text-label-sm text-on-error-container">Due in 2 days</span>
+              <h3 class="text-title-lg font-bold text-on-surface">{{ ca.assessment?.title || 'Technical Assessment' }}</h3>
             </div>
-            <p class="text-body-sm text-on-surface-variant">Invited by HealthAI Corp for Senior Frontend Developer role.</p>
+            <p class="text-body-sm text-on-surface-variant">{{ ca.assessment?.description || 'Prove your skills and boost your chances.' }}</p>
             <div class="flex flex-wrap gap-4 text-label-sm uppercase tracking-wide text-on-surface-variant">
-              <span><i class="fa-regular fa-clock mr-1"></i>30 Minutes</span>
-              <span><i class="fa-solid fa-list-ol mr-1"></i>25 Questions</span>
+              <span *ngIf="ca.assessment?.timeLimitMinutes"><i class="fa-regular fa-clock mr-1"></i>{{ ca.assessment?.timeLimitMinutes }} Minutes</span>
+              <span *ngIf="ca.assessment?.questions?.length"><i class="fa-solid fa-list-ol mr-1"></i>{{ ca.assessment?.questions?.length }} Questions</span>
             </div>
           </div>
           <div class="flex shrink-0">
-            <button class="w-full rounded-xl bg-primary px-6 py-3 text-label-md font-semibold text-on-primary md:w-auto">Start Now</button>
+            <a [routerLink]="['/candidate/assessments', ca.id, 'take']" class="w-full rounded-xl bg-primary px-6 py-3 text-center text-label-md font-semibold text-on-primary md:w-auto hover:opacity-90">Start Now</a>
           </div>
         </article>
 
-        <h3 class="mt-8 mb-4 text-title-lg text-on-surface">Recommended for Your Profile</h3>
-        
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <article class="rounded-2xl bg-surface-container p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
-            <div class="mb-3 flex items-center justify-between">
-              <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-surface-container-highest text-on-surface">
-                <i class="fa-brands fa-aws text-xl"></i>
-              </div>
-              <span class="text-label-sm font-semibold uppercase text-tertiary">High Impact</span>
-            </div>
-            <h4 class="text-title-md text-on-surface">Cloud Architecture basics</h4>
-            <p class="mt-2 text-body-sm text-on-surface-variant">Matches 80% of jobs in your pipeline.</p>
-            <button class="mt-4 w-full rounded-lg border border-primary px-4 py-2 text-label-md text-primary hover:bg-primary/5">Take Test</button>
-          </article>
-          
-          <article class="rounded-2xl bg-surface-container p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
-            <div class="mb-3 flex items-center justify-between">
-              <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-surface-container-highest text-on-surface">
-                <i class="fa-solid fa-database text-xl"></i>
-              </div>
-              <span class="text-label-sm font-semibold uppercase text-secondary">Medium Impact</span>
-            </div>
-            <h4 class="text-title-md text-on-surface">Advanced SQL Optimization</h4>
-            <p class="mt-2 text-body-sm text-on-surface-variant">Shows proficiency in complex backend roles.</p>
-            <button class="mt-4 w-full rounded-lg border border-primary px-4 py-2 text-label-md text-primary hover:bg-primary/5">Take Test</button>
-          </article>
+        <div *ngIf="pendingAssessments().length === 0" class="rounded-3xl bg-surface-container p-10 text-center text-on-surface-variant shadow-sm border border-outline-variant/20">
+          <i class="fa-solid fa-check-circle text-4xl text-success mb-3 opacity-80"></i>
+          <h3 class="text-title-lg font-bold text-on-surface">You're all caught up!</h3>
+          <p class="mt-2 text-body-md">You have no pending assessments at this time.</p>
         </div>
+
       </section>
 
+      <!-- Sidebar -->
       <aside class="space-y-4 xl:col-span-4">
+        <!-- Skill Score Widget -->
         <article class="rounded-2xl p-1 bg-gradient-to-r from-secondary to-primary shadow-lg">
           <div class="rounded-xl bg-surface-container p-5">
             <div class="mb-4 flex items-center justify-between">
-              <h3 class="text-title-md text-on-surface">Skill Score</h3>
+              <h3 class="text-title-md text-on-surface">Average Score</h3>
               <i class="fa-solid fa-medal text-primary"></i>
             </div>
             <div class="flex items-end gap-2">
-              <span class="text-display-md font-bold text-on-surface">820</span>
-              <span class="mb-2 text-body-sm text-on-surface-variant">/ 1000</span>
+              <span class="text-display-md font-bold text-on-surface">{{ skillScore() }}</span>
+              <span class="mb-2 text-body-sm text-on-surface-variant">%</span>
             </div>
-            <p class="mt-2 text-body-sm text-success">Top 15% in your region</p>
+            <p *ngIf="completedAssessments().length > 0" class="mt-2 text-body-sm text-success">Based on {{ completedAssessments().length }} completed assessments</p>
+            <p *ngIf="completedAssessments().length === 0" class="mt-2 text-body-sm text-on-surface-variant">Complete assessments to get a score</p>
           </div>
         </article>
 
-        <article class="rounded-2xl bg-surface-container p-5 shadow-sm">
-          <h3 class="mb-4 text-title-md text-on-surface">Completed</h3>
+        <!-- Completed Assessments -->
+        <article class="rounded-2xl bg-surface-container p-5 shadow-sm border border-outline-variant/20">
+          <h3 class="mb-4 text-title-md font-bold text-on-surface">Completed</h3>
           <ul class="space-y-4">
-            <li class="flex items-center justify-between">
+            <li *ngFor="let ca of completedAssessments()" class="flex items-center justify-between border-b border-outline-variant/20 pb-3 last:border-0 last:pb-0">
               <div>
-                <p class="text-label-md font-semibold text-on-surface">Typescript Fundamentals</p>
-                <p class="text-label-sm text-on-surface-variant">Oct 10, 2026</p>
+                <p class="text-label-md font-semibold text-on-surface">{{ ca.assessment?.title || 'Assessment' }}</p>
+                <p class="text-label-sm text-on-surface-variant">{{ ca.submittedAt | date:'mediumDate' }}</p>
               </div>
-              <span class="rounded bg-success/10 px-2 py-1 text-label-sm font-bold text-success">96%</span>
-            </li>
-            <li class="flex items-center justify-between">
-              <div>
-                <p class="text-label-md font-semibold text-on-surface">React Basics</p>
-                <p class="text-label-sm text-on-surface-variant">Aug 22, 2026</p>
-              </div>
-              <span class="rounded bg-success/10 px-2 py-1 text-label-sm font-bold text-success">88%</span>
-            </li>
-            <li class="flex items-center justify-between">
-              <div>
-                <p class="text-label-md font-semibold text-on-surface">System Design</p>
-                <p class="text-label-sm text-on-surface-variant">Jul 05, 2026</p>
-              </div>
-              <span class="rounded bg-warning/10 px-2 py-1 text-label-sm font-bold text-warning">72%</span>
+              <span class="rounded px-2 py-1 text-label-sm font-bold" 
+                    [ngClass]="(ca.score || 0) >= (ca.assessment?.passingScore || 50) ? 'bg-success-container text-on-success-container' : 'bg-warning-container text-on-warning-container'">
+                {{ ca.score }}%
+              </span>
             </li>
           </ul>
+          <div *ngIf="completedAssessments().length === 0" class="text-center text-body-sm text-on-surface-variant py-4">
+            No completed assessments yet.
+          </div>
         </article>
       </aside>
     </div>

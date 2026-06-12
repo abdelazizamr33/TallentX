@@ -1,0 +1,73 @@
+<div class="min-h-screen bg-surface-container-lowest p-4 md:p-8">
+  <div class="mx-auto max-w-4xl">
+    
+    <!-- Loading State -->
+    <div *ngIf="isLoading()" class="flex flex-col items-center justify-center rounded-3xl bg-surface-container p-16 shadow-sm border border-outline-variant/20">
+      <div class="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+      <p class="mt-4 text-body-md text-on-surface-variant">Preparing your assessment...</p>
+    </div>
+
+    <ng-container *ngIf="!isLoading() && candidateAssessment() as ca">
+      <!-- Header / Timer -->
+      <header class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between rounded-3xl bg-surface-container p-6 shadow-sm border border-outline-variant/20">
+        <div>
+          <h1 class="text-title-lg font-bold text-on-surface">{{ ca.assessment?.title }}</h1>
+          <p class="mt-1 text-body-sm text-on-surface-variant">Question {{ currentQuestionIndex() + 1 }} of {{ ca.assessment?.questions?.length }}</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="flex items-center gap-2 rounded-xl bg-error-container px-4 py-2 text-on-error-container font-mono text-title-md font-bold tracking-wider"
+               [ngClass]="{'animate-pulse bg-error text-on-error': timeRemainingSeconds() < 60}">
+            <i class="fa-regular fa-clock"></i>
+            {{ formattedTime() }}
+          </div>
+        </div>
+      </header>
+
+      <!-- Question Card -->
+      <main *ngIf="currentQuestion() as q" class="rounded-3xl bg-surface-container-lowest p-6 md:p-10 shadow-md ring-1 ring-outline-variant/30">
+        <h2 class="text-headline-sm font-bold text-on-surface leading-tight">{{ q.text }}</h2>
+        <p *ngIf="q.points" class="mt-2 text-label-sm uppercase tracking-wider text-tertiary">{{ q.points }} Points</p>
+
+        <div class="mt-8 space-y-3">
+          <!-- Options -->
+          <label *ngFor="let option of parseOptions(q.options); let i = index" 
+                 class="flex cursor-pointer items-center gap-4 rounded-2xl border-2 p-4 transition-all hover:bg-surface-container"
+                 [ngClass]="answers()[q.id] === i ? 'border-primary bg-primary-container/20' : 'border-outline-variant/30'">
+            <div class="flex h-6 w-6 items-center justify-center rounded-full border-2"
+                 [ngClass]="answers()[q.id] === i ? 'border-primary' : 'border-outline'">
+              <div *ngIf="answers()[q.id] === i" class="h-3 w-3 rounded-full bg-primary"></div>
+            </div>
+            <span class="text-body-lg text-on-surface">{{ option }}</span>
+          </label>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="mt-10 flex items-center justify-between border-t border-outline-variant/20 pt-6">
+          <button type="button" 
+                  (click)="prevQuestion()" 
+                  [disabled]="isFirstQuestion()"
+                  class="btn btn-outline min-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed">
+            <i class="fa-solid fa-arrow-left mr-2"></i> Previous
+          </button>
+
+          <button *ngIf="!isLastQuestion()" 
+                  type="button" 
+                  (click)="nextQuestion()"
+                  class="btn btn-primary min-w-[120px]">
+            Next <i class="fa-solid fa-arrow-right ml-2"></i>
+          </button>
+
+          <button *ngIf="isLastQuestion()" 
+                  type="button" 
+                  (click)="submitAssessment()"
+                  [disabled]="isSubmitting()"
+                  class="btn bg-success text-on-success hover:opacity-90 min-w-[140px]">
+            <span *ngIf="!isSubmitting()">Submit Test <i class="fa-solid fa-check ml-2"></i></span>
+            <span *ngIf="isSubmitting()"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Submitting</span>
+          </button>
+        </div>
+      </main>
+
+    </ng-container>
+  </div>
+</div>

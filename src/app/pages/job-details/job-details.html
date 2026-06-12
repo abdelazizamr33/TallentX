@@ -6,7 +6,7 @@
       <div class="w-8 h-8 rounded-full bg-surface-container-low shadow-sm flex items-center justify-center mr-3 group-hover:bg-primary/10 transition-all">
         <span class="material-symbols-outlined text-sm">arrow_back</span>
       </div>
-      <span class="font-medium font-['Inter']">Back to search</span>
+      <span class="font-medium font-['Inter']">Back to jobs</span>
     </button>
 
     <!-- ═══ Skeleton Loader ═══ -->
@@ -56,9 +56,9 @@
         <div class="flex items-center gap-6">
           <!-- Company Logo -->
           <div class="w-20 h-20 rounded-2xl bg-surface-container flex items-center justify-center p-2 shadow-sm">
-            <img *ngIf="job()?.companyLogo" [src]="job()?.companyLogo" [alt]="(job()?.companyName || 'Company') + ' logo'" class="w-full h-full object-contain rounded-lg">
-            <span *ngIf="!job()?.companyLogo" class="text-3xl font-black text-primary">
-              {{ job()?.companyName?.charAt(0) || 'C' }}
+            <img *ngIf="job()?.companyLogo" [src]="job()?.companyLogo" [alt]="(job()?.companyName || 'Unknown') + ' logo'" class="w-full h-full object-contain rounded-lg">
+            <span *ngIf="!job()?.companyLogo" class="text-3xl font-black text-primary uppercase">
+              {{ job()?.companyName?.charAt(0) || 'U' }}
             </span>
           </div>
           <div>
@@ -68,9 +68,9 @@
             <div class="flex items-center gap-3 mt-2 text-on-surface-variant flex-wrap">
               <span class="font-semibold text-primary">{{ job()?.companyName }}</span>
               <span class="text-outline-variant hidden sm:inline">•</span>
-              <span class="flex items-center gap-1">
+              <span *ngIf="job()?.location" class="flex items-center gap-1">
                 <span class="material-symbols-outlined text-sm">location_on</span>
-                {{ job()?.location || 'Remote' }}
+                {{ job()?.location }}
               </span>
               <span class="text-outline-variant hidden sm:inline">•</span>
               <span class="flex items-center gap-1">
@@ -82,7 +82,7 @@
         </div>
 
         <!-- Prominent CTAs -->
-        <div class="w-full md:w-auto flex flex-col gap-3">
+        <div *ngIf="!isRecruiterUser()" class="w-full md:w-auto flex flex-col gap-3">
           <!-- Already Applied State -->
           <button
             *ngIf="hasAlreadyApplied()"
@@ -162,7 +162,7 @@
 
 
           <!-- Salary Range Card -->
-          <div class="bg-surface-container-lowest p-6 rounded-[2rem] shadow-sm">
+          <div *ngIf="getSalaryDisplay() !== 'Not specified'" class="bg-surface-container-lowest p-6 rounded-[2rem] shadow-sm">
             <h3 class="text-sm font-bold uppercase tracking-widest text-outline mb-4">Salary Range</h3>
             <div class="flex flex-col">
               <span class="text-2xl font-bold text-on-surface">{{ getSalaryDisplay() }}</span>
@@ -174,13 +174,13 @@
           <div class="bg-surface-container-lowest p-6 rounded-[2rem] shadow-sm">
             <h3 class="text-sm font-bold uppercase tracking-widest text-outline mb-4">Company Overview</h3>
             <div class="space-y-4">
-              <p class="text-sm text-on-surface-variant leading-snug">
-                {{ job()?.companyDescription || 'Leading company in its industry with a focus on innovation and growth.' }}
+              <p *ngIf="job()?.companyDescription" class="text-sm text-on-surface-variant leading-snug">
+                {{ job()?.companyDescription }}
               </p>
               <div class="pt-4 border-t border-outline-variant/10 space-y-2">
-                <div class="flex justify-between text-xs">
+                <div *ngIf="job()?.location" class="flex justify-between text-xs">
                   <span class="text-outline">Location</span>
-                  <span class="font-semibold text-on-surface">{{ job()?.location || 'Remote' }}</span>
+                  <span class="font-semibold text-on-surface">{{ job()?.location }}</span>
                 </div>
                 <div class="flex justify-between text-xs">
                   <span class="text-outline">Type</span>

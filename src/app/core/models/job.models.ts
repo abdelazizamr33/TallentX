@@ -10,6 +10,7 @@ export interface JobListDto {
   careerLevel: JobLevel;
   salaryMin?: number;
   salaryMax?: number;
+  salaryRange?: string;
   currency?: string;
   skills: { id: number; name: string; requiredLevel: 1|2|3 }[];
   applicantsCount: number;
@@ -18,6 +19,18 @@ export interface JobListDto {
   /** Full job details — populated by GET /api/JobPosting/{id} */
   description?: string;
   requirements?: string;
+  employmentType?: string;
+  isActive?: boolean;
+  applicationDeadline?: string;
+  requiredSkills?: string[] | any[];
+  department?: string;
+  gpa?: number;
+  gpaPriority?: string;
+  experienceMinYears?: number;
+  experienceMaxYears?: number;
+  experiencePriority?: string;
+  degrees?: any[];
+  roles?: any[];
 }
 
 export interface CreateJobPostingDto {
@@ -30,7 +43,16 @@ export interface CreateJobPostingDto {
   companyId: number;
   isActive?: boolean;
   applicationDeadline?: string;
-  requiredSkills?: string[];
+  requiredSkills?: string[] | any[];
+  department?: string;
+  gpa?: number;
+  gpaPriority?: string;
+  experienceMinYears?: number;
+  experienceMaxYears?: number;
+  experiencePriority?: string;
+  degrees?: any[];
+  roles?: any[];
+  skills?: any[];
 }
 
 export interface JobApplicationDto {

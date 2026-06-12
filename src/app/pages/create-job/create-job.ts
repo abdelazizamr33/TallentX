@@ -2,12 +2,13 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, Validators, FormGroup, FormControl, FormArray } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { CreateJobService } from '../../core/services/create-jop.service';
 import { ToastService } from '../../core/services/toast.service';
+import { JobService } from '../../core/services/job';
+import { AuthService } from '../../core/services/auth.service';
 
 // ===== Interfaces =====
 
-export type Priority = 'High' | 'Low' | 'None';
+export type Priority = 'High' | 'Medium' | 'Low' | 'None';
 
 export interface DegreeItem {
   degreeName: string;
@@ -60,14 +61,15 @@ export interface NewJobFormValue {
 export class CreateJobPage {
 
   // ===== Services =====
-  private createJobService = inject(CreateJobService);
+  private jobService = inject(JobService);
+  private authService = inject(AuthService);
   private toastService = inject(ToastService);
   private router = inject(Router);
 
   // ===== Dropdowns Data =====
-  departments = ['Engineering', 'Product', 'Design'];
-  EmploymentType = ['Full-time', 'Part-time', 'Contract', 'Internship'];
-  PriorityS: Priority[] = ['High', 'Low', 'None'];
+  departments = ['Engineering', 'Product', 'Design', 'Marketing', 'Sales', 'HR'];
+  EmploymentType = ['FullTime', 'PartTime', 'Contract', 'Internship'];
+  PriorityS: Priority[] = ['High', 'Medium', 'Low', 'None'];
 
   // ===== Form =====
   newJobForm: FormGroup = new FormGroup({
@@ -173,15 +175,47 @@ export class CreateJobPage {
     }
 
     const formValue = this.newJobForm.value as NewJobFormValue;
+    
+    // Combine salary min and max into a salaryRange
+    let salaryRangeStr = '';
+    if (formValue.MinSalary && formValue.MaxSalary) {
+      salaryRangeStr = `USD ${formValue.MinSalary}-${formValue.MaxSalary}`;
+    } else if (formValue.MinSalary) {
+      salaryRangeStr = `USD ${formValue.MinSalary}+`;
+    } else if (formValue.MaxSalary) {
+      salaryRangeStr = `Up to USD ${formValue.MaxSalary}`;
+    }
 
-    this.createJobService.createJob(formValue).subscribe({
+    const payload = {
+      title: formValue.title,
+      description: formValue.JobDiscription,
+      requirements: formValue.TechnicalSkillDiscription, // Map TechnicalSkillDiscription as primary requirements
+      salaryRange: salaryRangeStr || undefined,
+      location: formValue.location || undefined,
+      employmentType: formValue.employmentType || 'FullTime',
+      department: formValue.department || undefined,
+      gpa: formValue.GPA ? parseFloat(formValue.GPA) : undefined,
+      gpaPriority: formValue.GPAPriority || undefined,
+      experienceMinYears: formValue.ExperienceMinYears ? parseInt(formValue.ExperienceMinYears, 10) : undefined,
+      experienceMaxYears: formValue.ExperienceMaxYears ? parseInt(formValue.ExperienceMaxYears, 10) : undefined,
+      experiencePriority: formValue.ExperiencePriority || undefined,
+      degrees: formValue.degrees?.length ? formValue.degrees : undefined,
+      roles: formValue.roles?.length ? formValue.roles : undefined,
+      skills: formValue.skills?.length ? formValue.skills : undefined,
+      companyId: this.authService.getCompanyId() || 1,
+      isActive: true
+    };
+
+    this.jobService.createJob(payload).subscribe({
       next: (response) => {
         console.log('Job created successfully', response);
         this.toastService.success('Job published successfully!');
-        this.router.navigate(['/jobs']);
+        this.router.navigate(['/recruiter/jobs']);
       },
       error: (err) => {
         console.error('Error creating job:', err);
+        const serverMsg = err?.error?.title || err?.error?.message || 'Failed to create job.';
+        this.toastService.error(serverMsg);
       }
     });
   }

@@ -86,7 +86,7 @@ export class RecruiterService {
       map((jobs) => jobs.map((job) => ({
         id: String(job.id),
         title: job.title,
-        status: 'active' as const,
+        status: ((job as any).isActive === false ? 'paused' : 'active') as 'active' | 'paused',
         applicantsCount: job.applicantsCount ?? 0,
         postedDate: job.createdAt
       }))),
@@ -140,10 +140,30 @@ export class RecruiterService {
   }
 
   updateJobStatus(id: string, newStatus: 'active' | 'paused' | 'closed'): Observable<boolean> {
-    const payload = { status: newStatus };
-    return this.http.put(`${this.jobPostingUrl}/${id}`, payload).pipe(
+    if (newStatus === 'closed') {
+      return this.http.delete(`${this.jobPostingUrl}/${id}`).pipe(
+        map(() => true),
+        catchError((err) => {
+          console.error('[RecruiterService] delete job failed:', err);
+          return of(false);
+        })
+      );
+    }
+    
+    return this.http.get<any>(`${this.jobPostingUrl}/${id}`).pipe(
+      switchMap(job => {
+        const payload = {
+          ...job,
+          isActive: newStatus === 'active',
+          requiredSkillIds: job.skills?.map((s: any) => s.skillId || s.id) || []
+        };
+        return this.http.put(`${this.jobPostingUrl}/${id}`, payload);
+      }),
       map(() => true),
-      catchError(() => of(false))
+      catchError((err) => {
+        console.error('[RecruiterService] update status failed:', err);
+        return of(false);
+      })
     );
   }
 

@@ -1,0 +1,87 @@
+<div class="bg-surface-bright font-body">
+  <aside
+    class="recruiter-sidebar fixed top-28 left-4 w-64 h-[calc(100vh-8rem)] rounded-3xl bg-white shadow-[0_10px_15px_-3px_rgba(0,0,0,0.03)] border border-outline-variant/20 flex flex-col p-4 gap-4 z-40 hidden lg:flex"
+  >
+    <div class="flex items-center gap-3 px-2 py-2">
+      <div class="w-12 h-12 rounded-xl overflow-hidden bg-white border border-outline-variant/20 flex items-center justify-center shrink-0">
+        <img [src]="companyLogo()" (error)="onLogoError($event)" alt="Company Logo" class="w-full h-full object-contain p-1" />
+      </div>
+      <div class="flex flex-col overflow-hidden">
+        <h2 class="text-sm font-bold text-[#191c1e] truncate leading-tight">{{ companyName() || 'Enterprise Suite' }}</h2>
+        <p class="text-[10px] text-outline font-bold tracking-widest uppercase mt-0.5">Recruiter</p>
+      </div>
+    </div>
+    <nav class="flex-1 space-y-1.5 overflow-y-auto no-scrollbar px-2">
+      <a
+        class="flex items-center gap-3 px-4 py-3 text-[#424754] hover:bg-[#f2f4f6] hover:text-[#191c1e] hover:translate-x-1 rounded-xl transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus:outline-none"
+        routerLinkActive="!text-white !bg-primary shadow-md hover:!text-white hover:translate-x-0"
+        routerLink="/recruiter/dashboard"
+      >
+        <span class="material-symbols-outlined text-lg">dashboard</span>
+        <span class="font-['Inter'] text-sm font-semibold tracking-wide uppercase">Dashboard</span>
+      </a>
+      <a
+        class="flex items-center gap-3 px-4 py-3 text-[#424754] hover:bg-[#f2f4f6] hover:text-[#191c1e] hover:translate-x-1 rounded-xl transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus:outline-none"
+        routerLinkActive="!text-white !bg-primary shadow-md hover:!text-white hover:translate-x-0"
+        routerLink="/recruiter/jobs"
+      >
+        <span class="material-symbols-outlined text-lg">work</span>
+        <span class="font-['Inter'] text-sm font-medium tracking-wide uppercase">Active Jobs</span>
+      </a>
+      <a
+        class="flex items-center gap-3 px-4 py-3 text-[#424754] hover:bg-[#f2f4f6] hover:text-[#191c1e] hover:translate-x-1 rounded-xl transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus:outline-none"
+        routerLinkActive="!text-white !bg-primary shadow-md hover:!text-white hover:translate-x-0"
+        routerLink="/recruiter/interviews"
+      >
+        <span class="material-symbols-outlined text-lg">calendar_today</span>
+        <span class="font-['Inter'] text-sm font-medium tracking-wide uppercase">Interviews</span>
+      </a>
+      <a
+        class="flex items-center gap-3 px-4 py-3 text-[#424754] hover:bg-[#f2f4f6] hover:text-[#191c1e] hover:translate-x-1 rounded-xl transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus:outline-none"
+        routerLinkActive="!text-white !bg-primary shadow-md hover:!text-white hover:translate-x-0"
+        routerLink="/recruiter/assessments"
+      >
+        <span class="material-symbols-outlined text-lg">assignment</span>
+        <span class="font-['Inter'] text-sm font-medium tracking-wide uppercase">Assessments</span>
+      </a>
+      <a
+        class="flex items-center gap-3 px-4 py-3 text-[#424754] hover:bg-[#f2f4f6] hover:text-[#191c1e] hover:translate-x-1 rounded-xl transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus:outline-none"
+        routerLinkActive="!text-white !bg-primary shadow-md hover:!text-white hover:translate-x-0"
+        routerLink="/company/settings"
+      >
+        <span class="material-symbols-outlined text-lg">business</span>
+        <span class="font-['Inter'] text-sm font-medium tracking-wide uppercase">Company Settings</span>
+      </a>
+
+      <a
+        class="flex items-center gap-3 px-4 py-3 text-[#424754] hover:bg-[#f2f4f6] hover:text-[#191c1e] hover:translate-x-1 rounded-xl transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus:outline-none"
+        routerLinkActive="!text-white !bg-primary shadow-md hover:!text-white hover:translate-x-0"
+        routerLink="/settings"
+      >
+        <span class="material-symbols-outlined text-lg">settings</span>
+        <span class="font-['Inter'] text-sm font-medium tracking-wide uppercase">Settings</span>
+      </a>
+    </nav>
+    <div class="mt-auto pt-4 border-t border-outline-variant/20 px-2 space-y-2">
+      <button
+        type="button"
+        (click)="createNewJob()"
+        class="w-full flex items-center justify-center gap-2 py-3 bg-primary text-white rounded-xl font-bold text-sm shadow-md hover:opacity-90 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary focus:outline-none transition-all active:scale-95"
+      >
+        <span class="material-symbols-outlined text-lg">add</span>
+        Create New Job
+      </button>
+      <button
+        type="button"
+        (click)="logout()"
+        class="w-full flex items-center gap-3 px-4 py-3 text-[#424754] hover:bg-[#f2f4f6] hover:text-error hover:translate-x-1 rounded-xl transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus:outline-none"
+      >
+        <span class="material-symbols-outlined text-lg">logout</span>
+        <span class="font-['Inter'] text-sm font-medium tracking-wide uppercase">Logout</span>
+      </button>
+    </div>
+  </aside>
+  <main class="lg:ml-72 pt-12 px-8 pb-12 min-h-screen">
+    <router-outlet></router-outlet>
+  </main>
+</div>

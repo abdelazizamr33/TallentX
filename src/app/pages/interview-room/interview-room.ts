@@ -62,8 +62,22 @@ export class InterviewRoom implements AfterViewInit {
   }
 
   getUserName(): string {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    return user.fullName || 'Guest';
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        if (user.fullName) return user.fullName;
+        if (user.firstName && user.lastName) return `${user.firstName} ${user.lastName}`;
+      } catch (e) {}
+    }
+    
+    // Fallback for recruiter
+    const email = localStorage.getItem('ies_email');
+    if (email) {
+      return email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    return 'Guest';
   }
 }
 

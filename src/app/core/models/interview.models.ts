@@ -9,7 +9,7 @@ export interface InterviewDto {
   scheduledTime: string;
   scheduledAt?: string;
   durationMinutes: number;
-  status: 'Scheduled' | 'Completed' | 'Cancelled';
+  status: 'Scheduled' | 'InProgress' | 'Completed' | 'Cancelled';
   meetingLink?: string;
   notes?: string;
 }
@@ -19,5 +19,4 @@ export interface ScheduleInterviewRequest {
   scheduledAt: string;
   durationMinutes: number;
   meetingLink?: string;
-  notes?: string;
 }

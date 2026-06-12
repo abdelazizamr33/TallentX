@@ -72,58 +72,62 @@ export const routes: Routes = [
   { path: 'candidate/saved-jobs', redirectTo: 'dashboard/saved-jobs', pathMatch: 'full' },
   { path: 'candidate/applications', redirectTo: 'dashboard/applications', pathMatch: 'full' },
 
-  // Recruiter Routes
+  // Recruiter and Company Routes (wrapped in layout)
   {
-    path: 'recruiter/dashboard',
-    canActivate: [recruiterGuard],
-    loadComponent: () => import('./pages/recruiter-dashboard/recruiter-dashboard').then(m => m.RecruiterDashboard),
-  },
-  {
-    path: 'recruiter/jobs',
-    canActivate: [recruiterGuard],
-    loadComponent: () => import('./pages/recruiter-jobs/recruiter-jobs').then(m => m.RecruiterJobs),
-  },
-  {
-    path: 'recruiter/jobs/new',
-    canActivate: [recruiterGuard],
-    loadComponent: () => import('./pages/create-job/create-job').then(m => m.CreateJobPage),
-  },
-  {
-    path: 'recruiter/jobs/edit/:id',
-    canActivate: [recruiterGuard],
-    loadComponent: () => import('./pages/edit-job/edit-job').then(m => m.EditJobPage),
-  },
-  {
-    path: 'recruiter/jobs/:jobId/applications',
-    canActivate: [recruiterGuard],
-    loadComponent: () => import('./pages/recruiter-applicants/recruiter-applicants').then(m => m.RecruiterApplicantsPage),
-  },
-  {
-    path: 'recruiter/applicants',
-    canActivate: [recruiterGuard],
-    loadComponent: () => import('./pages/recruiter-applicants/recruiter-applicants').then(m => m.RecruiterApplicantsPage),
-  },
-  {
-    path: 'recruiter/interviews',
-    canActivate: [recruiterGuard],
-    loadComponent: () => import('./pages/interview-scheduling/interview-scheduling').then(m => m.InterviewSchedulingPage),
-  },
-  {
-    path: 'recruiter/assessments',
-    canActivate: [recruiterGuard],
-    loadComponent: () => import('./pages/recruiter-assessments/recruiter-assessments').then(m => m.RecruiterAssessmentsPage),
-  },
-  {
-    path: 'recruiter/assessments/new',
-    canActivate: [recruiterGuard],
-    loadComponent: () => import('./pages/create-ai-interview/create-ai-interview').then(m => m.CreateAiInterviewPage),
-  },
-
-  // Admin/Company Routes
-  {
-    path: 'company/settings',
-    canActivate: [adminRecruiterGuard],
-    loadComponent: () => import('./pages/company-settings/company-settings').then(m => m.CompanySettingsPage),
+    path: '',
+    loadComponent: () => import('./layout/recruiter-layout/recruiter-layout.component').then(m => m.RecruiterLayoutComponent),
+    children: [
+      {
+        path: 'recruiter/dashboard',
+        canActivate: [recruiterGuard],
+        loadComponent: () => import('./pages/recruiter-dashboard/recruiter-dashboard').then(m => m.RecruiterDashboard),
+      },
+      {
+        path: 'recruiter/jobs',
+        canActivate: [recruiterGuard],
+        loadComponent: () => import('./pages/recruiter-jobs/recruiter-jobs').then(m => m.RecruiterJobs),
+      },
+      {
+        path: 'recruiter/jobs/new',
+        canActivate: [recruiterGuard],
+        loadComponent: () => import('./pages/create-job/create-job').then(m => m.CreateJobPage),
+      },
+      {
+        path: 'recruiter/jobs/edit/:id',
+        canActivate: [recruiterGuard],
+        loadComponent: () => import('./pages/edit-job/edit-job').then(m => m.EditJobPage),
+      },
+      {
+        path: 'recruiter/jobs/:jobId/applications',
+        canActivate: [recruiterGuard],
+        loadComponent: () => import('./pages/recruiter-applicants/recruiter-applicants').then(m => m.RecruiterApplicantsPage),
+      },
+      {
+        path: 'recruiter/applicants',
+        canActivate: [recruiterGuard],
+        loadComponent: () => import('./pages/recruiter-applicants/recruiter-applicants').then(m => m.RecruiterApplicantsPage),
+      },
+      {
+        path: 'recruiter/interviews',
+        canActivate: [recruiterGuard],
+        loadComponent: () => import('./pages/interview-scheduling/interview-scheduling').then(m => m.InterviewSchedulingPage),
+      },
+      {
+        path: 'recruiter/assessments',
+        canActivate: [recruiterGuard],
+        loadComponent: () => import('./pages/recruiter-assessments/recruiter-assessments').then(m => m.RecruiterAssessmentsPage),
+      },
+      {
+        path: 'recruiter/assessments/new',
+        canActivate: [recruiterGuard],
+        loadComponent: () => import('./pages/create-ai-interview/create-ai-interview').then(m => m.CreateAiInterviewPage),
+      },
+      {
+        path: 'company/settings',
+        canActivate: [adminRecruiterGuard],
+        loadComponent: () => import('./pages/company-settings/company-settings').then(m => m.CompanySettingsPage),
+      }
+    ]
   },
 
   // Shared / General Public Pages

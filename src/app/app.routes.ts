@@ -59,6 +59,11 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./pages/dashboard-applications/applications').then(m => m.ApplicationsPage),
   },
+  {
+    path: 'candidate/applications/:id/track',
+    canActivate: [candidateGuard],
+    loadComponent: () => import('./pages/application-tracking/application-tracking').then(m => m.ApplicationTrackingPage),
+  },
   { path: 'candidate/saved-jobs', redirectTo: 'dashboard/saved-jobs', pathMatch: 'full' },
   { path: 'candidate/applications', redirectTo: 'dashboard/applications', pathMatch: 'full' },
 

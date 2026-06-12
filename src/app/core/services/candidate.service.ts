@@ -236,6 +236,19 @@ export class CandidateService {
     );
   }
 
+  getApplicationById(applicationId: number): Observable<JobApplicationDto> {
+    return this.http.get<JobApplicationDto>(`${environment.apiUrl}/JobApplication/${applicationId}`).pipe(
+      map((item: any) => ({
+        ...item,
+        id: Number(item?.id ?? item?.applicationId ?? 0),
+        jobPostingId: Number(item?.jobPostingId ?? item?.jobPostId ?? item?.jobId ?? 0),
+        candidateId: String(item?.candidateId ?? ''),
+        status: String(item?.status ?? 'Pending'),
+        appliedAt: item?.appliedAt ?? new Date().toISOString()
+      }))
+    );
+  }
+
   getApplications(): Observable<JobApplicationDto[]> {
     const candidateId = localStorage.getItem('ies_user_id');
     if (!candidateId) return of([]);

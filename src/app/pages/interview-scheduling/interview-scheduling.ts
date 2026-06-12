@@ -9,7 +9,7 @@ import { ToastService } from '../../core/services/toast.service';
 import { Router } from '@angular/router';
 import { JobApplicationDto } from '../../core/models/job.models';
 export type InterviewType = 'Online' | 'On-site' | 'Technical' | 'HR';
-export type InterviewDisplayStatus = 'Scheduled' | 'Confirmed' | 'Pending' | 'Rescheduled' | 'Cancelled';
+export type InterviewDisplayStatus = 'Scheduled' | 'Confirmed' | 'Pending' | 'Rescheduled' | 'Cancelled' | 'Completed';
 
 export interface UpcomingInterviewItem extends InterviewDto {
   companyName: string;
@@ -31,7 +31,13 @@ interface InterviewApplicationOption {
   id: number;
   candidateName: string;
   jobTitle: string;
+  jobPostingId: number;
   status: string;
+}
+
+interface InterviewJobOption {
+  id: number;
+  title: string;
 }
 
 @Component({
@@ -52,7 +58,9 @@ export class InterviewSchedulingPage implements OnInit {
   readonly isLoadingApplications = signal<boolean>(true);
   readonly isSubmitting = signal<boolean>(false);
   readonly expandedId = signal<number | null>(null);
-  readonly availableApplications = signal<InterviewApplicationOption[]>([]);
+  readonly editingId = signal<number | null>(null);
+  readonly availableJobs = signal<InterviewJobOption[]>([]);
+  readonly allApplications = signal<InterviewApplicationOption[]>([]);
 
   readonly timeSections: { key: InterviewTimeBucket; label: string }[] = [
     { key: 'today', label: 'Today' },
@@ -62,9 +70,8 @@ export class InterviewSchedulingPage implements OnInit {
   ];
 
   readonly upcoming = computed(() => {
-    const now = Date.now();
     return this.interviews()
-      .filter((item) => item.status === 'Scheduled' && new Date(item.scheduledTime).getTime() > now - 60_000)
+      .filter((item) => item.status === 'Scheduled' || item.status === 'InProgress')
       .sort((a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime());
   });
 
@@ -94,16 +101,30 @@ export class InterviewSchedulingPage implements OnInit {
   }
 
   readonly interviewForm = this.fb.nonNullable.group({
-    jobApplicationId: [0, [Validators.required, Validators.min(1)]],
+    jobId: [0, [Validators.required, Validators.min(1)]],
+    jobApplicationId: [{ value: 0, disabled: true }, [Validators.required, Validators.min(1)]],
     scheduledTime: ['', Validators.required],
     durationMinutes: [45, [Validators.required, Validators.min(15)]],
     meetingLink: [''],
-    notes: [''],
   });
+
+  get filteredApplications(): InterviewApplicationOption[] {
+    const jobId = this.interviewForm.controls.jobId.value;
+    return this.allApplications().filter(app => app.jobPostingId === Number(jobId));
+  }
 
   ngOnInit(): void {
     this.loadInterviews();
     this.loadAvailableApplications();
+
+    this.interviewForm.controls.jobId.valueChanges.subscribe(jobId => {
+      this.interviewForm.controls.jobApplicationId.setValue(0);
+      if (jobId && jobId > 0) {
+        this.interviewForm.controls.jobApplicationId.enable();
+      } else {
+        this.interviewForm.controls.jobApplicationId.disable();
+      }
+    });
   }
 
   loadInterviews(): void {
@@ -151,9 +172,14 @@ export class InterviewSchedulingPage implements OnInit {
       .subscribe({
         next: (jobs) => {
           if (!jobs.length) {
-            this.availableApplications.set([]);
+            this.availableJobs.set([]);
+            this.allApplications.set([]);
             return;
           }
+          
+          this.availableJobs.set(
+            jobs.map(j => ({ id: Number(j.id), title: j.title }))
+          );
 
           forkJoin(
             jobs.map((job) => this.recruiterService.getJobApplicants(Number(job.id), 1, 100))
@@ -163,16 +189,17 @@ export class InterviewSchedulingPage implements OnInit {
                 .flat()
                 .map((application) => this.toApplicationOption(application))
                 .sort((a, b) => a.candidateName.localeCompare(b.candidateName));
-              this.availableApplications.set(options);
+              this.allApplications.set(options);
             },
             error: () => {
-              this.availableApplications.set([]);
+              this.allApplications.set([]);
               this.toast.error('Failed to load your applicants.');
             },
           });
         },
         error: () => {
-          this.availableApplications.set([]);
+          this.availableJobs.set([]);
+          this.allApplications.set([]);
           this.toast.error('Failed to load your jobs.');
         },
       });
@@ -183,6 +210,7 @@ export class InterviewSchedulingPage implements OnInit {
       id: application.id,
       candidateName: application.candidateName || application.candidateId,
       jobTitle: application.jobTitle || `Job #${application.jobPostingId}`,
+      jobPostingId: application.jobPostingId,
       status: application.status,
     };
   }
@@ -249,7 +277,27 @@ export class InterviewSchedulingPage implements OnInit {
   }
 
   rescheduleInterview(item: UpcomingInterviewItem): void {
-    this.toast.show(`Reschedule request noted for ${item.candidateName}.`, 'info');
+    this.editingId.set(item.id);
+    
+    // Convert to local datetime-local format string
+    const date = new Date(item.scheduledTime);
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const localStr = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+
+    const application = this.allApplications().find(a => a.id === item.jobApplicationId);
+    if (application) {
+      this.interviewForm.controls.jobId.setValue(application.jobPostingId);
+    }
+
+    this.interviewForm.patchValue({
+      jobApplicationId: item.jobApplicationId,
+      scheduledTime: localStr,
+      durationMinutes: item.durationMinutes,
+      meetingLink: item.meetingLink || ''
+    });
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    this.toast.show(`Editing interview for ${item.candidateName}.`, 'info');
   }
 
   schedule(): void {
@@ -279,44 +327,83 @@ export class InterviewSchedulingPage implements OnInit {
 
     const scheduledTimeLocal = new Date(value.scheduledTime).toISOString();
 
-    const roomId = this.generateRoomId();
-    const meetingLink = `https://meet.jit.si/TallentX-${roomId}`;
+    let meetingLink = value.meetingLink;
+    if (!meetingLink || meetingLink.trim() === '') {
+      const roomId = this.generateRoomId();
+      meetingLink = `https://meet.jit.si/TallentX-${roomId}`;
+    }
 
     this.isSubmitting.set(true);
 
-    this.interviewService
-      .schedule({
-        jobApplicationId: Number(value.jobApplicationId),
-        scheduledAt: scheduledTimeLocal,
-        durationMinutes: Number(value.durationMinutes),
-        meetingLink,
-        notes: value.notes || undefined,
-      })
-      .pipe(finalize(() => this.isSubmitting.set(false)))
-      .subscribe({
-        next: (created) => {
-          const display = this.toDisplayItem(created);
-          display.roomName = meetingLink.split('/').pop();
-          display.companyName = 'Your Company';
-          display.interviewType = 'Online';
-          display.displayStatus = 'Scheduled';
-          this.interviews.update((current) => 
-            [display, ...current].sort((a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime())
-          );
-          this.interviewForm.reset({
-            jobApplicationId: 0,
-            scheduledTime: '',
-            durationMinutes: 45,
-            meetingLink: '',
-            notes: '',
-          });
-          this.toast.success('Interview scheduled successfully.');
-        },
-        error: (err) => {
-          const serverMsg = err?.error?.message || err?.error?.title || 'Failed to schedule interview.';
-          this.toast.error(serverMsg);
-        },
-      });
+    if (this.editingId()) {
+      // Reschedule (Update)
+      const currentId = this.editingId()!;
+      this.interviewService
+        .update(currentId, {
+          status: 'Scheduled', // ensure it remains scheduled
+          scheduledAt: scheduledTimeLocal,
+          meetingLink
+        })
+        .pipe(finalize(() => this.isSubmitting.set(false)))
+        .subscribe({
+          next: (updated) => {
+            const display = this.toDisplayItem(updated);
+            this.interviews.update((current) =>
+              current.map((i) => (i.id === currentId ? { ...display, roomName: display.meetingLink?.split('/').pop() } : i))
+                .sort((a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime())
+            );
+            this.resetForm();
+            this.toast.success('Interview rescheduled successfully.');
+          },
+          error: (err) => {
+            const serverMsg = err?.error?.message || err?.error?.title || 'Failed to reschedule interview.';
+            this.toast.error(serverMsg);
+          },
+        });
+    } else {
+      // Schedule New
+      this.interviewService
+        .schedule({
+          jobApplicationId: Number(value.jobApplicationId),
+          scheduledAt: scheduledTimeLocal,
+          durationMinutes: Number(value.durationMinutes),
+          meetingLink,
+        })
+        .pipe(finalize(() => this.isSubmitting.set(false)))
+        .subscribe({
+          next: (created) => {
+            const display = this.toDisplayItem(created);
+            display.roomName = meetingLink.split('/').pop();
+            display.companyName = 'Your Company';
+            display.interviewType = 'Online';
+            display.displayStatus = 'Scheduled';
+            this.interviews.update((current) => 
+              [display, ...current].sort((a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime())
+            );
+            this.resetForm();
+            this.toast.success('Interview scheduled successfully.');
+          },
+          error: (err) => {
+            const serverMsg = err?.error?.message || err?.error?.title || 'Failed to schedule interview.';
+            this.toast.error(serverMsg);
+          },
+        });
+    }
+  }
+
+  cancelEdit(): void {
+    this.resetForm();
+  }
+
+  private resetForm(): void {
+    this.editingId.set(null);
+    this.interviewForm.reset({
+      jobId: 0,
+      jobApplicationId: 0,
+      scheduledTime: '',
+      durationMinutes: 45,
+      meetingLink: '',
+    });
   }
 
   cancelInterview(interviewId: number): void {
@@ -331,14 +418,23 @@ export class InterviewSchedulingPage implements OnInit {
     });
   }
 
+  markCompleted(interviewId: number): void {
+    this.interviewService.update(interviewId, { status: 'Completed' }).subscribe({
+      next: () => {
+        this.interviews.update((current) =>
+          current.map((item) => (item.id === interviewId ? { ...item, status: 'Completed', displayStatus: 'Completed' } : item))
+        );
+        this.toast.success('Interview marked as completed.');
+      },
+      error: () => this.toast.error('Failed to mark interview as completed.'),
+    });
+  }
+
   generateRoomId(): string {
     return 'room-' + Math.random().toString(36).substring(2, 10);
   }
 
-  startInterview(): void {
-    const roomId = this.generateRoomId();
-    this.router.navigate(['/interview', roomId]);
-  }
+
 
   joinInterview(link: string | undefined): void {
     if (!link) {

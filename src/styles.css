@@ -168,11 +168,11 @@
   --color-background: #eeeeee;
   --color-surface: #eeeeee;
   --color-surface-bright: #eeeeee;
-  --color-surface-dim: #eeeeee;
-  --color-surface-container: #eeeeee;
-  --color-surface-container-high: #eeeeee;
-  --color-surface-container-highest: #eeeeee;
-  --color-surface-container-low: #eeeeee;
+  --color-surface-dim: #d8dadc;
+  --color-surface-container: #eceef0;
+  --color-surface-container-high: #e6e8ea;
+  --color-surface-container-highest: #e0e3e5;
+  --color-surface-container-low: #f2f4f6;
   --color-surface-container-lowest: #ffffff;
   --color-surface-variant: #e0e3e5;
   --color-surface-tint: #005ac2;

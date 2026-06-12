@@ -231,10 +231,17 @@
               <app-candidate-card
                 [candidateId]="app.candidateId || app.id"
                 [name]="app.candidateName || app.candidateId"
+                [email]="app.candidateEmail"
+                [imageUrl]="app.candidateImage"
                 [status]="app.status"
                 dateLabel="Applied"
                 [dateValue]="app.appliedAt"
+                [score]="app.matchScore"
+                [maxScore]="100"
+                [fitStatus]="app.fitStatus"
+                [recruiterRating]="app.recruiterRating"
                 [routerLink]="['/recruiter/candidates', app.candidateId || app.id]"
+                (rate)="onRateCandidate(app, $event)"
               ></app-candidate-card>
             }
           </div>

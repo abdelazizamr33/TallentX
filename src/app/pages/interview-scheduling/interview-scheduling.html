@@ -191,19 +191,12 @@
                       class="rounded-lg border border-outline-variant/30 bg-surface-container-lowest px-3 py-1.5 text-label-sm font-semibold text-on-surface hover:bg-surface-container-high transition-colors">
                       {{ expandedId() === item.id ? 'Hide' : 'View' }}
                     </button>
-                    <button type="button" (click)="joinInterview(item.meetingLink)"
+                    <button type="button" (click)="joinInterview(item)"
                       class="rounded-lg bg-primary px-3 py-1.5 text-label-sm font-semibold text-on-primary hover:bg-primary/90 transition-colors"
                       [disabled]="!item.meetingLink">
                       Join
                     </button>
-                    <button type="button" (click)="rescheduleInterview(item)"
-                      class="rounded-lg border border-primary/25 bg-primary/5 px-3 py-1.5 text-label-sm font-semibold text-primary hover:bg-primary/10 transition-colors">
-                      Reschedule
-                    </button>
-                    <button type="button" (click)="markCompleted(item.id)"
-                      class="rounded-lg border border-success/30 bg-success/5 px-3 py-1.5 text-label-sm font-semibold text-success hover:bg-success/10 transition-colors">
-                      Complete
-                    </button>
+
                     <button type="button" (click)="cancelInterview(item.id)"
                       class="rounded-lg bg-error-container px-3 py-1.5 text-label-sm font-semibold text-on-error-container hover:opacity-90 transition-colors">
                       Cancel

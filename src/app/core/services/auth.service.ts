@@ -98,6 +98,10 @@ export class AuthService {
     return localStorage.getItem(this.USER_ID_KEY);
   }
 
+  getRecruiterRole(): string | null {
+    return localStorage.getItem(this.RECRUITER_ROLE_KEY);
+  }
+
   getCompanyId(): number | null {
     const id = localStorage.getItem(this.COMPANY_ID_KEY);
     if (id) {

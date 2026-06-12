@@ -3,45 +3,68 @@
     <header>
       <p class="text-label-md uppercase tracking-widest text-primary">Organization</p>
       <h1 class="mt-1 text-display-sm text-on-surface">Company Settings</h1>
-      <p class="mt-2 text-body-md text-on-surface-variant">Configure branding, hiring preferences, and workspace defaults.</p>
+      <p class="mt-2 text-body-md text-on-surface-variant">Configure branding, and workspace defaults.</p>
     </header>
 
     <section class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <!-- Company Logo / Image -->
+      <article class="rounded-3xl bg-surface-container-lowest p-6 shadow-sm ring-1 ring-outline-variant/30 flex flex-col items-center justify-center">
+        <h2 class=" text-title-lg text-on-surface mb-10 w-full text-left">Company Image</h2>
+        <div class="relative w-32 h-32 rounded-2xl overflow-hidden bg-surface-container ring-1 ring-outline-variant/30 flex items-center justify-center">
+          @if (companyLogoUrl()) {
+            <img [src]="companyLogoUrl()" alt="Company Logo" class="w-full h-full object-cover" />
+          } @else {
+            <span class="text-display-md text-on-surface-variant/50">
+              {{ companyName() ? companyName().charAt(0).toUpperCase() : 'C' }}
+            </span>
+          }
+        </div>
+      </article>
       <article class="rounded-3xl bg-surface-container-lowest p-6 shadow-sm ring-1 ring-outline-variant/30 lg:col-span-2">
         <h2 class="text-title-lg text-on-surface">Profile Details</h2>
         <div class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
             <label class="text-label-sm text-on-surface">Company Name</label>
-            <input type="text" [value]="companyName()" readonly class="mt-1 w-full rounded-xl bg-surface-container px-4 py-2.5 text-on-surface outline-none ring-1 ring-outline-variant/40 opacity-70 cursor-not-allowed" />
+            <input type="text" 
+                   [ngModel]="companyName()" 
+                   (ngModelChange)="companyName.set($event)"
+                   [readonly]="!isAdmin()" 
+                   [ngClass]="{'opacity-70 cursor-not-allowed': !isAdmin(), 'focus:ring-2 focus:ring-primary': isAdmin()}"
+                   class="mt-1 w-full rounded-xl bg-surface-container px-4 py-2.5 text-on-surface outline-none ring-1 ring-outline-variant/40 transition-shadow" />
           </div>
           <div>
             <label class="text-label-sm text-on-surface">Industry</label>
-            <input type="text" [value]="companyIndustry()" readonly class="mt-1 w-full rounded-xl bg-surface-container px-4 py-2.5 text-on-surface outline-none ring-1 ring-outline-variant/40 opacity-70 cursor-not-allowed" />
+            <input type="text" 
+                   [ngModel]="companyIndustry()" 
+                   (ngModelChange)="companyIndustry.set($event)"
+                   [readonly]="!isAdmin()" 
+                   [ngClass]="{'opacity-70 cursor-not-allowed': !isAdmin(), 'focus:ring-2 focus:ring-primary': isAdmin()}"
+                   class="mt-1 w-full rounded-xl bg-surface-container px-4 py-2.5 text-on-surface outline-none ring-1 ring-outline-variant/40 transition-shadow" />
           </div>
           <div class="md:col-span-2">
             <label class="text-label-sm text-on-surface">Website</label>
-            <input type="text" [value]="companyWebsite()" readonly class="mt-1 w-full rounded-xl bg-surface-container px-4 py-2.5 text-on-surface outline-none ring-1 ring-outline-variant/40 opacity-70 cursor-not-allowed" />
+            <input type="text" 
+                   [ngModel]="companyWebsite()" 
+                   (ngModelChange)="companyWebsite.set($event)"
+                   [readonly]="!isAdmin()" 
+                   [ngClass]="{'opacity-70 cursor-not-allowed': !isAdmin(), 'focus:ring-2 focus:ring-primary': isAdmin()}"
+                   class="mt-1 w-full rounded-xl bg-surface-container px-4 py-2.5 text-on-surface outline-none ring-1 ring-outline-variant/40 transition-shadow" />
           </div>
         </div>
+
+        @if (isAdmin()) {
+          <div class="mt-6 flex justify-end">
+            <button 
+              (click)="saveCompanyDetails()"
+              [disabled]="isSaving()"
+              class="rounded-lg bg-primary px-6 py-2.5 text-label-md font-medium text-on-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+              {{ isSaving() ? 'Saving...' : 'Save Changes' }}
+            </button>
+          </div>
+        }
       </article>
 
-      <article class="rounded-3xl bg-surface-container-lowest p-6 shadow-sm ring-1 ring-outline-variant/30">
-        <h2 class="text-title-md text-on-surface">Hiring Preferences</h2>
-        <div class="mt-4 space-y-3 text-body-sm text-on-surface-variant">
-          <label class="flex items-center justify-between rounded-xl bg-surface-container p-3">
-            <span>Enable AI shortlisting</span>
-            <input type="checkbox" checked />
-          </label>
-          <label class="flex items-center justify-between rounded-xl bg-surface-container p-3">
-            <span>Auto-schedule interviews</span>
-            <input type="checkbox" />
-          </label>
-          <label class="flex items-center justify-between rounded-xl bg-surface-container p-3">
-            <span>Anonymous resume mode</span>
-            <input type="checkbox" checked />
-          </label>
-        </div>
-      </article>
+
     </section>
 
     <!-- Recruiter Invite Codes Section -->

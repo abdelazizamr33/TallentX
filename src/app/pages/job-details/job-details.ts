@@ -410,4 +410,21 @@ export class JobDetails implements OnInit {
         }
       });
   }
+
+  onRateCandidate(application: any, rating: number): void {
+    const applicationId = application.id;
+    this.recruiterService.rateJobApplication(applicationId, rating).subscribe({
+      next: () => {
+        // Update local applicant data
+        const currentApplicants = this.applicants();
+        this.applicants.set(currentApplicants.map(app => 
+          app.id === applicationId ? { ...app, recruiterRating: rating } : app
+        ));
+        this.toastService.success('Rating saved successfully');
+      },
+      error: () => {
+        this.toastService.error('Failed to save rating');
+      }
+    });
+  }
 }

@@ -26,12 +26,18 @@ export class CompanySettingsPage implements OnInit {
   companyName = signal<string>('');
   companyIndustry = signal<string>('');
   companyWebsite = signal<string>('');
+  companyLogoUrl = signal<string | null>(null);
+
+  isAdmin = signal<boolean>(false);
+  isSaving = signal<boolean>(false);
 
   // Form fields for generating new code
   maxUses = signal<number>(5);
   validDays = signal<number>(30);
 
   ngOnInit(): void {
+    const role = this.authService.getRecruiterRole();
+    this.isAdmin.set(role === 'Admin');
     this.loadInviteCodes();
   }
 
@@ -57,7 +63,31 @@ export class CompanySettingsPage implements OnInit {
           this.companyName.set(company.name || '');
           this.companyIndustry.set(company.industry || '');
           this.companyWebsite.set(company.website || '');
+          this.companyLogoUrl.set(company.logoPath || null);
         }
+      }
+    });
+  }
+
+  saveCompanyDetails(): void {
+    if (!this.isAdmin()) return;
+    
+    const companyId = this.authService.getCompanyId();
+    if (!companyId) return;
+
+    this.isSaving.set(true);
+    this.companyService.updateCompany(companyId, {
+      name: this.companyName(),
+      industry: this.companyIndustry(),
+      website: this.companyWebsite()
+    }).subscribe({
+      next: () => {
+        this.toast.success('Company details updated successfully');
+        this.isSaving.set(false);
+      },
+      error: () => {
+        this.toast.error('Failed to update company details');
+        this.isSaving.set(false);
       }
     });
   }

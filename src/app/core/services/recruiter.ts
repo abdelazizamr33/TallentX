@@ -248,6 +248,11 @@ export class RecruiterService {
     });
   }
 
+  rateJobApplication(id: number, rating: number): Observable<any> {
+    // Note: Assuming a PUT endpoint for setting recruiter rating.
+    return this.http.put(`${this.jobAppUrl}/${id}/rate`, { recruiterRating: rating });
+  }
+
   exportApplicants(jobPostId: number): Observable<Blob> {
     return this.http.get(`${this.jobAppUrl}/job/${jobPostId}/export`, { responseType: 'blob' });
   }

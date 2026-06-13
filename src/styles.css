@@ -165,14 +165,14 @@
   --color-on-tertiary-fixed-variant: #6900b3;
 
   /* === SURFACE COLORS (Light Mode) - Stitch Spec === */
-  --color-background: #eee;
-  --color-surface: #eee;
-  --color-surface-bright: #eee;
-  --color-surface-dim: #eee;
-  --color-surface-container: #eee;
-  --color-surface-container-high: #eee;
-  --color-surface-container-highest: #eee;
-  --color-surface-container-low: #eee;
+  --color-background: #eeeeee;
+  --color-surface: #eeeeee;
+  --color-surface-bright: #eeeeee;
+  --color-surface-dim: #d8dadc;
+  --color-surface-container: #eceef0;
+  --color-surface-container-high: #e6e8ea;
+  --color-surface-container-highest: #e0e3e5;
+  --color-surface-container-low: #f2f4f6;
   --color-surface-container-lowest: #ffffff;
   --color-surface-variant: #e0e3e5;
   --color-surface-tint: #005ac2;

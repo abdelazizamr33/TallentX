@@ -124,8 +124,13 @@
 
         <!-- ═══ Profile Dropdown ═══ -->
         <div class="relative">
-          <button (click)="toggleProfileDropdown()" class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm cursor-pointer border border-primary/20 hover:bg-primary/20 transition-colors">
-            {{ userInitial }}
+          <button (click)="toggleProfileDropdown()" class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm cursor-pointer border border-primary/20 hover:bg-primary/20 transition-colors overflow-hidden">
+            <ng-container *ngIf="userPhotoUrl(); else initialTpl">
+              <img [src]="userPhotoUrl()" alt="User Photo" class="w-full h-full object-cover">
+            </ng-container>
+            <ng-template #initialTpl>
+              {{ userInitial }}
+            </ng-template>
           </button>
           
           <!-- Dropdown Panel -->

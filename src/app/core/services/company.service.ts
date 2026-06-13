@@ -17,6 +17,12 @@ export class CompanyService {
     return this.http.put<CompanyDetailDto>(`${this.base}/${id}`, data);
   }
 
+  updateCompanyLogo(id: number, file: File): Observable<{ picturePath: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.put<{ picturePath: string }>(`${this.base}/${id}/logo`, formData);
+  }
+
   transferAdmin(companyId: number, newAdminId: string): Observable<any> {
     return this.http.post(`${this.base}/${companyId}/transfer-admin`, { newAdminId });
   }

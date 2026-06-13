@@ -8,7 +8,7 @@
       </div>
       <div class="flex flex-col overflow-hidden">
         <h2 class="text-sm font-bold text-[#191c1e] truncate leading-tight">{{ companyName() || 'Enterprise Suite' }}</h2>
-        <p class="text-[10px] text-outline font-bold tracking-widest uppercase mt-0.5">Recruiter</p>
+        <p class="text-[10px] text-outline font-bold tracking-widest uppercase mt-0.5">{{ isAdmin() ? 'Admin' : 'Recruiter' }}</p>
       </div>
     </div>
     <nav class="flex-1 space-y-1.5 overflow-y-auto no-scrollbar px-2">

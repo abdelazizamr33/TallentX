@@ -242,15 +242,16 @@ export class RecruiterService {
     return this.http.get<JobApplicationDto[]>(`${this.jobAppUrl}/job/${jobPostId}/status/${status}`, { params });
   }
 
-  updateApplicationStatus(id: number, newStatus: string): Observable<JobApplicationDto> {
-    return this.http.put<JobApplicationDto>(`${this.jobAppUrl}/${id}/status`, {
-      status: newStatus
-    });
+  updateApplicationStatus(id: number, newStatus: string, rejectionReason?: string): Observable<JobApplicationDto> {
+    const body: any = { status: newStatus };
+    if (rejectionReason) {
+      body.rejectionReason = rejectionReason;
+    }
+    return this.http.put<JobApplicationDto>(`${this.jobAppUrl}/${id}/status`, body);
   }
 
   rateJobApplication(id: number, rating: number): Observable<any> {
-    // Note: Assuming a PUT endpoint for setting recruiter rating.
-    return this.http.put(`${this.jobAppUrl}/${id}/rate`, { recruiterRating: rating });
+    return this.http.put(`${this.jobAppUrl}/${id}/rating`, rating);
   }
 
   exportApplicants(jobPostId: number): Observable<Blob> {

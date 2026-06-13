@@ -4,7 +4,7 @@ import { ActivatedRoute, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
 import { RecruiterService } from '../../core/services/recruiter';
-import { JobApplicationDto } from '../../core/models/job.models';
+import { JobApplicationDto, ApplicationStatuses } from '../../core/models/job.models';
 import { ToastService } from '../../core/services/toast.service';
 
 @Component({
@@ -17,6 +17,8 @@ export class RecruiterApplicantsPage implements OnInit {
   private route = inject(ActivatedRoute);
   private recruiterService = inject(RecruiterService);
   private toast = inject(ToastService);
+
+  readonly applicationStatuses = ApplicationStatuses;
 
   readonly applicants = signal<JobApplicationDto[]>([]);
   readonly isLoading = signal<boolean>(true);
@@ -61,7 +63,10 @@ export class RecruiterApplicantsPage implements OnInit {
     this.recruiterService.getJobApplicants(jobId)
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
-        next: (applications) => this.applicants.set(applications ?? []),
+        next: (applications) => {
+          const activeApps = (applications ?? []).filter(a => a.status?.toLowerCase() !== 'withdrawn');
+          this.applicants.set(activeApps);
+        },
         error: () => {
           this.applicants.set([]);
           this.toast.error('Failed to load applicants.');
@@ -74,7 +79,10 @@ export class RecruiterApplicantsPage implements OnInit {
     this.recruiterService.getAllApplicants()
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
-        next: (applications) => this.applicants.set(applications ?? []),
+        next: (applications) => {
+          const activeApps = (applications ?? []).filter(a => a.status?.toLowerCase() !== 'withdrawn');
+          this.applicants.set(activeApps);
+        },
         error: () => {
           this.applicants.set([]);
           this.toast.error('Failed to load all applicants.');
@@ -95,14 +103,58 @@ export class RecruiterApplicantsPage implements OnInit {
       return;
     }
 
-    this.recruiterService.updateApplicationStatus(application.id, status).subscribe({
+    let notes: string | undefined;
+    if (status.toLowerCase() === 'rejected') {
+      const input = prompt('Please enter the rejection reason (required):');
+      if (!input || input.trim() === '') {
+        this.toast.error('Rejection reason is required.');
+        this.applicants.set([...this.applicants()]);
+        return;
+      }
+      notes = input.trim();
+    }
+
+    this.recruiterService.updateApplicationStatus(application.id, status, notes).subscribe({
       next: (updated) => {
         this.applicants.update((current) =>
           current.map((item) => item.id === application.id ? updated : item)
         );
         this.toast.success(`Application moved to ${status}.`);
       },
-      error: () => this.toast.error('Failed to update applicant status.')
+      error: () => {
+        this.toast.error('Failed to update applicant status.');
+        this.applicants.set([...this.applicants()]);
+      }
     });
+  }
+
+  getStatusColorClass(status: string): string {
+    if (!status) return '';
+    const s = status.toLowerCase();
+    switch (s) {
+      case 'accepted':
+      case 'completed':
+      case 'offered':
+        return 'bg-emerald-100 text-emerald-800 border-emerald-300';
+      case 'interview':
+      case 'interviewing':
+        return 'bg-amber-100 text-amber-800 border-amber-300';
+      case 'assessment':
+        return 'bg-violet-100 text-violet-800 border-violet-300';
+      case 'underreview':
+      case 'in progress':
+        return 'bg-sky-100 text-sky-800 border-sky-300';
+      case 'pending':
+      case 'new':
+      case 'submitted':
+        return 'bg-slate-100 text-slate-800 border-slate-300';
+      case 'rejected':
+      case 'failed':
+        return 'bg-rose-100 text-rose-800 border-rose-300';
+      case 'withdrawn':
+        return 'bg-neutral-100 text-neutral-800 border-neutral-300';
+      default:
+        return 'bg-surface-container text-on-surface-variant border-outline-variant/30';
+    }
   }
 }

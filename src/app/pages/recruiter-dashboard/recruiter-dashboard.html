@@ -87,11 +87,8 @@
             </div>
             <div class="flex flex-col items-end">
               <span
-                class="text-[10px] font-bold px-2 py-0.5 rounded-full min-w-[60px] text-center"
-                [ngClass]="{
-                  'text-success bg-emerald-50': applicant.status === 'Shortlisted',
-                  'text-tertiary bg-tertiary-fixed': applicant.status !== 'Shortlisted',
-                }"
+                class="text-[10px] font-bold px-2 py-0.5 rounded-full min-w-[60px] text-center border"
+                [ngClass]="getStatusColorClass(applicant.status)"
               >
                 {{ applicant.status }}
               </span>

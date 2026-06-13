@@ -404,7 +404,9 @@ export class JobDetails implements OnInit {
       .subscribe({
         next: (res: any) => {
           const items = res.items || res || [];
-          this.applicants.set(items.filter((a: any) => a.status?.toLowerCase() !== 'withdrawn'));
+          const activeApplicants = items.filter((a: any) => a.status?.toLowerCase() !== 'withdrawn');
+          const sortedApplicants = activeApplicants.sort((a: any, b: any) => (b.matchScore || 0) - (a.matchScore || 0));
+          this.applicants.set(sortedApplicants);
         },
         error: () => {
           this.toastService.error('Failed to load job applicants.');

@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-surface-container-lowest p-6 md:p-8">
+<div class="min-h-screen rounded-4xl bg-surface-container-lowest p-6 md:p-8">
   <div class="mx-auto max-w-6xl space-y-7">
     <header>
       <p class="text-label-md uppercase tracking-widest text-primary">Organization</p>
@@ -8,19 +8,35 @@
 
     <section class="grid grid-cols-1 gap-6 lg:grid-cols-3">
             <!-- Company Logo / Image -->
-      <article class="rounded-3xl bg-surface-container-lowest p-6 shadow-sm ring-1 ring-outline-variant/30 flex flex-col items-center justify-center">
-        <h2 class=" text-title-lg text-on-surface mb-10 w-full text-left">Company Image</h2>
-        <div class="relative w-32 h-32 rounded-2xl overflow-hidden bg-surface-container ring-1 ring-outline-variant/30 flex items-center justify-center">
-          @if (companyLogoUrl()) {
-            <img [src]="companyLogoUrl()" alt="Company Logo" class="w-full h-full object-cover" />
-          } @else {
-            <span class="text-display-md text-on-surface-variant/50">
-              {{ companyName() ? companyName().charAt(0).toUpperCase() : 'C' }}
-            </span>
+      <article class="rounded-3xl bg-surface-container-lowest p-6 shadow-sm border border-gray-300 flex flex-col items-center justify-start h-full">
+        <h2 class="text-title-lg text-on-surface mb-6 w-full text-left">Company Image</h2>
+        <div class="flex-1 flex flex-col items-center justify-center w-full">
+          <div class="relative w-32 h-32 rounded-2xl overflow-hidden bg-surface-container border border-gray-300 flex items-center justify-center group">
+            @if (companyLogoUrl()) {
+              <img [src]="companyLogoUrl()" alt="Company Logo" class="w-full h-full object-cover" />
+            } @else {
+              <span class="text-display-md text-on-surface-variant/50">
+                {{ companyName() ? companyName().charAt(0).toUpperCase() : 'C' }}
+              </span>
+            }
+            
+            @if (isAdmin()) {
+              <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer"
+                   (click)="fileInput.click()">
+                <span class="text-white text-label-sm font-medium">Change Logo</span>
+              </div>
+            }
+          </div>
+          
+          @if (isAdmin()) {
+            <input type="file" #fileInput class="hidden" accept="image/jpeg,image/png,image/jpg" (change)="onLogoSelected($event)" />
+            <p class="mt-4 text-body-xs text-on-surface-variant text-center">
+              Upload a JPG or PNG image<br>(max 5MB)
+            </p>
           }
         </div>
       </article>
-      <article class="rounded-3xl bg-surface-container-lowest p-6 shadow-sm ring-1 ring-outline-variant/30 lg:col-span-2">
+      <article class="rounded-3xl bg-surface-container-lowest p-6 shadow-sm border border-gray-300 lg:col-span-2">
         <h2 class="text-title-lg text-on-surface">Profile Details</h2>
         <div class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
@@ -34,21 +50,39 @@
           </div>
           <div>
             <label class="text-label-sm text-on-surface">Industry</label>
-            <input type="text" 
+            <select 
                    [ngModel]="companyIndustry()" 
                    (ngModelChange)="companyIndustry.set($event)"
-                   [readonly]="!isAdmin()" 
+                   [disabled]="!isAdmin()" 
                    [ngClass]="{'opacity-70 cursor-not-allowed': !isAdmin(), 'focus:ring-2 focus:ring-primary': isAdmin()}"
-                   class="mt-1 w-full rounded-xl bg-surface-container px-4 py-2.5 text-on-surface outline-none ring-1 ring-outline-variant/40 transition-shadow" />
+                   class="mt-1 w-full rounded-xl bg-surface-container px-4 py-2.5 text-on-surface outline-none ring-1 ring-outline-variant/40 transition-shadow">
+              <option value="">Select Industry...</option>
+              <option value="Software & Technology">Software & Technology</option>
+              <option value="Financial Services">Financial Services</option>
+              <option value="Healthcare">Healthcare</option>
+              <option value="Renewable Energy">Renewable Energy</option>
+              <option value="Creative Arts">Creative Arts</option>
+            </select>
           </div>
           <div class="md:col-span-2">
             <label class="text-label-sm text-on-surface">Website</label>
-            <input type="text" 
+            <input type="url" 
+                   placeholder="https://example.com"
                    [ngModel]="companyWebsite()" 
                    (ngModelChange)="companyWebsite.set($event)"
                    [readonly]="!isAdmin()" 
                    [ngClass]="{'opacity-70 cursor-not-allowed': !isAdmin(), 'focus:ring-2 focus:ring-primary': isAdmin()}"
                    class="mt-1 w-full rounded-xl bg-surface-container px-4 py-2.5 text-on-surface outline-none ring-1 ring-outline-variant/40 transition-shadow" />
+          </div>
+          <div class="md:col-span-2">
+            <label class="text-label-sm text-on-surface">Description</label>
+            <textarea 
+                   [ngModel]="companyDescription()" 
+                   (ngModelChange)="companyDescription.set($event)"
+                   [readonly]="!isAdmin()" 
+                   rows="4"
+                   [ngClass]="{'opacity-70 cursor-not-allowed': !isAdmin(), 'focus:ring-2 focus:ring-primary': isAdmin()}"
+                   class="mt-1 w-full rounded-xl bg-surface-container px-4 py-2.5 text-on-surface outline-none ring-1 ring-outline-variant/40 transition-shadow"></textarea>
           </div>
         </div>
 
@@ -68,7 +102,7 @@
     </section>
 
     <!-- Recruiter Invite Codes Section -->
-    <section class="rounded-3xl bg-surface-container-lowest p-6 shadow-sm ring-1 ring-outline-variant/30">
+    <section class="rounded-3xl bg-surface-container-lowest p-6 shadow-sm border border-gray-300">
       <div class="flex items-center justify-between">
         <div>
           <h2 class="text-title-lg text-on-surface">Recruiter Invitations</h2>
@@ -83,7 +117,7 @@
 
       <!-- Generate New Code Form -->
       @if (showGenerateForm()) {
-        <div class="mt-6 rounded-2xl bg-surface-container p-6 border border-outline-variant/30">
+        <div class="mt-6 rounded-2xl bg-surface-container p-6 border border-gray-300">
           <h3 class="text-title-md text-on-surface mb-4">Create New Invite Code</h3>
           <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>

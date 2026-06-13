@@ -26,7 +26,9 @@ export class CompanySettingsPage implements OnInit {
   companyName = signal<string>('');
   companyIndustry = signal<string>('');
   companyWebsite = signal<string>('');
+  companyDescription = signal<string>('');
   companyLogoUrl = signal<string | null>(null);
+  selectedLogoFile = signal<File | null>(null);
 
   isAdmin = signal<boolean>(false);
   isSaving = signal<boolean>(false);
@@ -36,8 +38,17 @@ export class CompanySettingsPage implements OnInit {
   validDays = signal<number>(30);
 
   ngOnInit(): void {
-    const role = this.authService.getRecruiterRole();
-    this.isAdmin.set(role === 'Admin');
+    const recruiterRole = this.authService.getRecruiterRole();
+    const globalRole = this.authService.getRole();
+    
+    // Check if any of the role claims indicate admin
+    this.isAdmin.set(
+      recruiterRole === 'Admin' || 
+      recruiterRole === 'admin' || 
+      globalRole === 'Admin' || 
+      globalRole === 'admin'
+    );
+    
     this.loadInviteCodes();
   }
 
@@ -63,7 +74,14 @@ export class CompanySettingsPage implements OnInit {
           this.companyName.set(company.name || '');
           this.companyIndustry.set(company.industry || '');
           this.companyWebsite.set(company.website || '');
+          this.companyDescription.set(company.description || '');
           this.companyLogoUrl.set(company.logoPath || null);
+          
+          // Fallback check: If the logged-in user is the recorded admin of the company
+          const currentUserId = this.authService.getUserId();
+          if (currentUserId && company.adminId === currentUserId) {
+            this.isAdmin.set(true);
+          }
         }
       }
     });
@@ -75,13 +93,26 @@ export class CompanySettingsPage implements OnInit {
     const companyId = this.authService.getCompanyId();
     if (!companyId) return;
 
+    let finalWebsite = this.companyWebsite()?.trim() || '';
+    if (finalWebsite && !finalWebsite.startsWith('http://') && !finalWebsite.startsWith('https://')) {
+      finalWebsite = 'https://' + finalWebsite;
+    }
+
     this.isSaving.set(true);
     this.companyService.updateCompany(companyId, {
       name: this.companyName(),
       industry: this.companyIndustry(),
-      website: this.companyWebsite()
+      website: finalWebsite,
+      description: this.companyDescription()
     }).subscribe({
-      next: () => {
+      next: (company) => {
+        // Update signals with backend returned data to ensure sync
+        if (company) {
+          this.companyName.set(company.name || '');
+          this.companyIndustry.set(company.industry || '');
+          this.companyWebsite.set(company.website || '');
+          this.companyDescription.set(company.description || '');
+        }
         this.toast.success('Company details updated successfully');
         this.isSaving.set(false);
       },
@@ -90,6 +121,36 @@ export class CompanySettingsPage implements OnInit {
         this.isSaving.set(false);
       }
     });
+  }
+
+  onLogoSelected(event: any): void {
+    if (!this.isAdmin()) return;
+    
+    const file = event.target.files[0] as File;
+    if (file) {
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+      if (!allowedTypes.includes(file.type)) {
+        this.toast.error('Only JPG and PNG files are allowed');
+        return;
+      }
+      
+      // Validate file size (5MB max)
+      const maxSize = 5 * 1024 * 1024;
+      if (file.size > maxSize) {
+        this.toast.error('Image size must be less than 5MB');
+        return;
+      }
+
+      this.selectedLogoFile.set(file);
+      
+      // Create a preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.companyLogoUrl.set(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   }
 
   generateNewCode(): void {

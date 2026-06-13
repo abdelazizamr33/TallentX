@@ -1,4 +1,4 @@
-<header class="bg-surface-container-lowest dark:bg-inverse-surface sticky top-0 z-50 border-b border-surface-container-highest/20 transition-colors duration-300">
+<header class="bg-surface-container-lowest sticky top-0 z-50 border-b border-surface-container-highest/20 transition-colors duration-300">
   <nav class="flex justify-between items-center w-full px-8 py-4 max-w-[1920px] mx-auto">
     <div class="flex items-center gap-8">
       <a routerLink="/landing" class="flex items-center shrink-0" aria-label="TallentX home">
@@ -29,7 +29,7 @@
         <div class="relative" id="notification-bell-container">
           <button
             (click)="toggleNotificationDropdown()"
-            class="p-2 hover:bg-surface-container-low dark:hover:bg-surface-container-high rounded-lg transition-all active:scale-95 duration-150 ease-in-out text-on-surface-variant flex items-center justify-center relative"
+            class="p-2 hover:bg-surface-container-low rounded-lg transition-all active:scale-95 duration-150 ease-in-out text-on-surface-variant flex items-center justify-center relative"
             [class.text-primary]="notificationDropdownOpen()"
             [class.bg-primary/5]="notificationDropdownOpen()"
             id="notification-bell-btn"
@@ -47,7 +47,7 @@
           <!-- ═══ Notification Dropdown Panel ═══ -->
           <div
             *ngIf="notificationDropdownOpen()"
-            class="absolute right-0 top-full mt-2 w-[380px] max-h-[480px] bg-surface-container-lowest dark:bg-surface-container rounded-2xl shadow-xl ring-1 ring-outline-variant/10 overflow-hidden z-50 notification-dropdown-enter"
+            class="absolute right-0 top-full mt-2 w-[380px] max-h-[480px] bg-surface-container-lowest rounded-2xl shadow-xl ring-1 ring-outline-variant/10 overflow-hidden z-50 notification-dropdown-enter"
           >
             <!-- Dropdown Header -->
             <div class="flex items-center justify-between px-5 py-4 border-b border-outline-variant/10">
@@ -71,7 +71,7 @@
               <ng-container *ngIf="notificationService.recentNotifications().length > 0; else emptyNotifications">
                 <div
                   *ngFor="let notification of notificationService.recentNotifications()"
-                  class="flex gap-3 px-5 py-4 hover:bg-surface-container-low/50 dark:hover:bg-surface-container-high/50 transition-colors cursor-pointer"
+                  class="flex gap-3 px-5 py-4 hover:bg-surface-container-low/50 transition-colors cursor-pointer"
                   [class.bg-primary/3]="!notification.isRead"
                   (click)="markNotificationRead(notification.id)"
                 >
@@ -131,7 +131,7 @@
           <!-- Dropdown Panel -->
           <div
             *ngIf="profileDropdownOpen()"
-            class="absolute right-0 top-full mt-2 w-56 bg-surface-container-lowest dark:bg-surface-container rounded-2xl shadow-xl ring-1 ring-outline-variant/10 overflow-hidden z-50 notification-dropdown-enter"
+            class="absolute right-0 top-full mt-2 w-56 bg-surface-container-lowest rounded-2xl shadow-xl ring-1 ring-outline-variant/10 overflow-hidden z-50 notification-dropdown-enter"
           >
             <div class="py-2">
               <a [routerLink]="profileRoute === '/candidate/profile' ? '/candidate/dashboard' : '/recruiter/dashboard'" (click)="closeProfileDropdown()" class="flex items-center gap-3 px-4 py-3 text-body-sm text-on-surface hover:bg-surface-container-low transition-colors">
@@ -177,7 +177,7 @@
         </div>
       </ng-container>
 
-      <button (click)="mobileMenuOpen = !mobileMenuOpen" class="md:hidden p-2 hover:bg-surface-container-low dark:hover:bg-surface-container-high rounded-lg transition-all active:scale-95 duration-150 ease-in-out text-on-surface-variant flex items-center justify-center">
+      <button (click)="mobileMenuOpen = !mobileMenuOpen" class="md:hidden p-2 hover:bg-surface-container-low rounded-lg transition-all active:scale-95 duration-150 ease-in-out text-on-surface-variant flex items-center justify-center">
         <span class="material-symbols-outlined">{{ mobileMenuOpen ? 'close' : 'menu' }}</span>
       </button>
     </div>

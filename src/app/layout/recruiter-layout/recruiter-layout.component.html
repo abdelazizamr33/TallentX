@@ -52,14 +52,16 @@
         <span class="material-symbols-outlined text-lg">assignment</span>
         <span class="font-['Inter'] text-sm font-medium tracking-wide uppercase">Assessments</span>
       </a>
-      <a
-        class="flex items-center gap-3 px-4 py-3 text-[#424754] hover:bg-[#f2f4f6] hover:text-[#191c1e] hover:translate-x-1 rounded-xl transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus:outline-none"
-        routerLinkActive="!text-white !bg-primary shadow-md hover:!text-white hover:translate-x-0"
-        routerLink="/company/settings"
-      >
-        <span class="material-symbols-outlined text-lg">business</span>
-        <span class="font-['Inter'] text-sm font-medium tracking-wide uppercase">Company Settings</span>
-      </a>
+      @if (isAdmin()) {
+        <a
+          class="flex items-center gap-3 px-4 py-3 text-[#424754] hover:bg-[#f2f4f6] hover:text-[#191c1e] hover:translate-x-1 rounded-xl transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus:outline-none"
+          routerLinkActive="!text-white !bg-primary shadow-md hover:!text-white hover:translate-x-0"
+          routerLink="/company/settings"
+        >
+          <span class="material-symbols-outlined text-lg">business</span>
+          <span class="font-['Inter'] text-sm font-medium tracking-wide uppercase">Company Settings</span>
+        </a>
+      }
 
       <a
         class="flex items-center gap-3 px-4 py-3 text-[#424754] hover:bg-[#f2f4f6] hover:text-[#191c1e] hover:translate-x-1 rounded-xl transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus:outline-none"

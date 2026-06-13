@@ -293,57 +293,7 @@
   --z-tooltip: 1070;
 }
 
-/* ===== DARK MODE TOKENS ===== */
-.dark {
-  /* Surface Colors (Dark Mode) - Stitch Spec */
-  --color-background: #111318;
-  --color-surface: #111318;
-  --color-surface-bright: #363a3d;
-  --color-surface-dim: #111318;
-  --color-surface-container: #1d2023;
-  --color-surface-container-high: #272a2e;
-  --color-surface-container-highest: #323538;
-  --color-surface-container-low: #1a1c22;
-  --color-surface-container-lowest: #0e1015;
-  --color-surface-variant: #43464e;
-  --color-on-background: #e1e2ea;
-  --color-on-surface: #e1e2ea;
-  --color-on-surface-variant: #c4c6d0;
 
-  /* Outline Colors (Dark Mode) */
-  --color-outline: #8e9099;
-  --color-outline-variant: #43464e;
-
-  /* Inverse Colors (Dark Mode) */
-  --color-inverse-surface: #e1e3e5;
-  --color-inverse-on-surface: #2d3133;
-  --color-inverse-primary: #0058be;
-
-  /* Adjusted Primary for Dark */
-  --color-primary: #adc6ff;
-  --color-on-primary: #002f65;
-  --color-primary-container: #004395;
-  --color-on-primary-container: #d8e2ff;
-
-  /* Adjusted Secondary for Dark */
-  --color-secondary: #c0c1ff;
-  --color-on-secondary: #1a18a2;
-  --color-secondary-container: #2f2ebe;
-  --color-on-secondary-container: #e1e0ff;
-
-  /* Adjusted Tertiary for Dark */
-  --color-tertiary: #ddb7ff;
-  --color-on-tertiary: #4d0082;
-  --color-tertiary-container: #6900b3;
-  --color-on-tertiary-container: #f0dbff;
-
-  /* Shadows (Darker for dark mode) */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
-  --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.4), 0 4px 8px -2px rgba(0, 0, 0, 0.2);
-  --shadow-xl: 0 24px 48px -8px rgba(0, 0, 0, 0.4), 0 12px 24px -4px rgba(0, 0, 0, 0.2);
-  --shadow-2xl: 0 32px 64px -12px rgba(0, 0, 0, 0.5);
-}
 
 /* ===== BASE STYLES ===== */
 *,
@@ -699,10 +649,7 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.dark .glass {
-  background: rgba(29, 32, 35, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
+
 
 .glass-heavy {
   background: rgba(255, 255, 255, 0.85);
@@ -710,9 +657,7 @@ body {
   -webkit-backdrop-filter: blur(24px);
 }
 
-.dark .glass-heavy {
-  background: rgba(29, 32, 35, 0.85);
-}
+
 
 /* ===== CHIP/TAG COMPONENTS ===== */
 .chip {
@@ -874,9 +819,7 @@ body {
     background: var(--color-surface-variant);
     border: none;
   }
-  .dark .glass {
-    background: var(--color-surface-variant);
-  }
+
   .glass-heavy {
     background: var(--color-surface-variant);
   }

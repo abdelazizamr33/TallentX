@@ -26,13 +26,28 @@ export class RecruiterLayoutComponent implements OnInit {
 
   companyName = signal<string>('');
   companyLogo = signal<string>('/logo.jpeg');
+  isAdmin = signal<boolean>(false);
 
   ngOnInit(): void {
+    const recruiterRole = this.authService.getRecruiterRole();
+    const globalRole = this.authService.getRole();
+    const userId = this.authService.getUserId();
+    
+    this.isAdmin.set(
+      recruiterRole === 'Admin' || 
+      recruiterRole === 'admin' || 
+      globalRole === 'Admin' || 
+      globalRole === 'admin'
+    );
+
     const companyId = this.authService.getCompanyId();
     if (companyId) {
       this.companyService.getCompany(companyId).pipe(catchError(() => of(null))).subscribe(company => {
         if (company) {
           this.companyName.set(company.name);
+          if (userId && company.adminId === userId) {
+            this.isAdmin.set(true);
+          }
           if (company.logoPath) {
             const normalizedPath = company.logoPath.replace(/\\/g, '/');
             const logoUrl = normalizedPath.startsWith('http') 

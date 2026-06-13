@@ -69,11 +69,7 @@ export class ThemeService {
    */
   private applyTheme(isDark: boolean): void {
     const htmlElement = document.documentElement;
-    if (isDark) {
-      htmlElement.classList.add('dark');
-    } else {
-      htmlElement.classList.remove('dark');
-    }
+    htmlElement.classList.remove('dark');
   }
 
   /**

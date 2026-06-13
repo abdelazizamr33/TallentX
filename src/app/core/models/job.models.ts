@@ -1,5 +1,14 @@
 import { JobLevel } from './candidate.models';
 
+export const ApplicationStatuses = [
+  'Pending',
+  'UnderReview',
+  'Assessment',
+  'Interview',
+  'Accepted',
+  'Rejected'
+];
+
 export interface JobListDto {
   id: number;
   title: string;

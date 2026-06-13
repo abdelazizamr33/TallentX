@@ -403,7 +403,10 @@ export class JobDetails implements OnInit {
       .pipe(finalize(() => this.isLoadingApplicants.set(false)))
       .subscribe({
         next: (res: any) => {
-          this.applicants.set(res.items || res || []);
+          const items = res.items || res || [];
+          const activeApplicants = items.filter((a: any) => a.status?.toLowerCase() !== 'withdrawn');
+          const sortedApplicants = activeApplicants.sort((a: any, b: any) => (b.matchScore || 0) - (a.matchScore || 0));
+          this.applicants.set(sortedApplicants);
         },
         error: () => {
           this.toastService.error('Failed to load job applicants.');
@@ -424,6 +427,38 @@ export class JobDetails implements OnInit {
       },
       error: () => {
         this.toastService.error('Failed to save rating');
+      }
+    });
+  }
+
+  onStatusChange(application: any, newStatus: string): void {
+    if (application.status === newStatus) return;
+
+    let notes: string | undefined;
+    if (newStatus.toLowerCase() === 'rejected') {
+      const input = prompt('Please enter the rejection reason (required):');
+      if (!input || input.trim() === '') {
+        this.toastService.error('Rejection reason is required.');
+        // Revert UI by triggering signal update
+        this.applicants.set([...this.applicants()]);
+        return;
+      }
+      notes = input.trim();
+    }
+
+    this.recruiterService.updateApplicationStatus(application.id, newStatus, notes).subscribe({
+      next: () => {
+        // Update local applicants list
+        const currentApplicants = this.applicants();
+        this.applicants.set(currentApplicants.map(app => 
+          app.id === application.id ? { ...app, status: newStatus } : app
+        ));
+        this.toastService.success(`Status updated to ${newStatus}`);
+      },
+      error: () => {
+        this.toastService.error('Failed to update status');
+        // Revert UI on error
+        this.applicants.set([...this.applicants()]);
       }
     });
   }

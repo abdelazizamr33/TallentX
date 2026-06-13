@@ -44,12 +44,35 @@
           <div>
             <h2 class="text-title-md text-on-surface">{{ applicant.candidateName || applicant.candidateId }}</h2>
             <p class="mt-1 text-body-sm text-on-surface-variant">
-              {{ applicant.jobTitle || 'Job' }} | Match: {{ applicant.matchScore ?? 0 }}%
+              {{ applicant.jobTitle || 'Job' }}
             </p>
             <p class="mt-1 text-label-sm uppercase text-on-surface-variant">Applied {{ applicant.appliedAt | date:'medium' }}</p>
           </div>
 
-          <div class="flex flex-wrap items-center gap-2">
+          <div class="flex flex-wrap items-center gap-6">
+            <!-- Fit Status -->
+            <div *ngIf="applicant.fitStatus" class="flex flex-col items-center">
+              <div class="text-sm text-on-surface-variant uppercase tracking-widest font-bold">Fit Status</div>
+              <div class="text-sm uppercase font-bold" [ngClass]="{'text-success': applicant.fitStatus?.toLowerCase() === 'fit', 'text-error': applicant.fitStatus?.toLowerCase() === 'not fit', 'text-primary': applicant.fitStatus?.toLowerCase() !== 'fit' && applicant.fitStatus?.toLowerCase() !== 'not fit'}">{{ applicant.fitStatus }}</div>
+            </div>
+
+            <!-- Match Score -->
+            <div *ngIf="applicant.matchScore !== undefined && applicant.matchScore !== null" class="flex flex-col items-end">
+              <div class="text-sm font-bold text-on-surface-variant uppercase tracking-widest">Score</div>
+              <div class="text-sm font-bold" [ngClass]="{'text-success': applicant.matchScore >= 70, 'text-error': applicant.matchScore < 70}">
+                {{ applicant.matchScore }}<span class="text-sm text-on-surface-variant font-normal ml-0.5">/ 100</span>
+              </div>
+            </div>
+
+            <!-- AI Processing State -->
+            <div *ngIf="!applicant.fitStatus && (applicant.matchScore === undefined || applicant.matchScore === null) && applicant.status?.toLowerCase() === 'pending'" class="flex items-center gap-3 bg-primary/10 text-primary px-3 py-1.5 rounded-lg border border-primary/20">
+              <span class="material-symbols-outlined text-lg animate-spin">progress_activity</span>
+              <div class="flex flex-col">
+                <span class="text-[10px] font-bold uppercase tracking-wider">AI Scoring</span>
+                <span class="text-xs font-medium leading-tight">Analyzing candidate...</span>
+              </div>
+            </div>
+
             <select
               class="rounded-lg px-2 py-1.5 text-label-sm font-bold uppercase tracking-wider ring-1 outline-none transition-colors focus:ring-2 focus:ring-primary"
               [ngClass]="getStatusColorClass(applicant.status)"

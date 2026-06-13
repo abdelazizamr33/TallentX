@@ -21,7 +21,7 @@
       <!-- Fit Status -->
       <div *ngIf="fitStatus" class="flex flex-col md:items-end">
         <div class="text-xs text-on-surface-variant uppercase tracking-wider font-semibold">Fit Status</div>
-        <div class="text-sm font-bold text-primary">{{ fitStatus }}</div>
+        <div class="text-md font-bold uppercase" [ngClass]="{'text-success': fitStatus?.toLowerCase() === 'fit', 'text-error': fitStatus?.toLowerCase() === 'not fit', 'text-primary': fitStatus?.toLowerCase() !== 'fit' && fitStatus?.toLowerCase() !== 'not fit'}">{{ fitStatus }}</div>
       </div>
 
       <!-- Match Score -->
@@ -29,6 +29,15 @@
         <div class="text-xs text-on-surface-variant uppercase tracking-wider font-semibold">Match Score</div>
         <div class="text-title-lg font-bold" [ngClass]="{'text-success': score >= (maxScore ? maxScore * 0.7 : 70), 'text-error': score < (maxScore ? maxScore * 0.7 : 70)}">
           {{ score }}<span class="text-body-sm text-on-surface-variant font-normal ml-1" *ngIf="maxScore">/ {{ maxScore }}</span>
+        </div>
+      </div>
+
+      <!-- AI Processing State -->
+      <div *ngIf="!fitStatus && (score === undefined || score === null) && status?.toLowerCase() === 'pending'" class="flex items-center gap-3 bg-primary/10 text-primary px-3 py-1.5 rounded-lg border border-primary/20">
+        <span class="material-symbols-outlined text-lg animate-spin">progress_activity</span>
+        <div class="flex flex-col">
+          <span class="text-[10px] font-bold uppercase tracking-wider">AI Scoring</span>
+          <span class="text-xs font-medium leading-tight">Analyzing candidate...</span>
         </div>
       </div>
     </div>

@@ -7,6 +7,9 @@ import { AuthService } from '../../core/services/auth.service';
 import { SignalRService } from '../../core/services/signalr.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { ToastService } from '../../core/services/toast.service';
+import { CandidateService } from '../../core/services/candidate.service';
+import { CompanyService } from '../../core/services/company.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-navbar',
@@ -21,11 +24,14 @@ export class Navbar implements OnInit, OnDestroy {
   private signalRService = inject(SignalRService);
   public notificationService = inject(NotificationService);
   private toast = inject(ToastService);
+  private candidateService = inject(CandidateService);
+  private companyService = inject(CompanyService);
 
   public mobileMenuOpen = false;
   public authenticated = false;
   public profileRoute = '/candidate/dashboard';
   public userInitial = 'U';
+  public userPhotoUrl = signal<string | null>(null);
 
   /** Controls the notification dropdown visibility */
   public notificationDropdownOpen = signal(false);
@@ -35,6 +41,7 @@ export class Navbar implements OnInit, OnDestroy {
 
   private navSub?: Subscription;
   private signalRSub?: Subscription;
+  private profileSub?: Subscription;
 
   constructor(public themeService: ThemeService) {}
 
@@ -49,6 +56,13 @@ export class Navbar implements OnInit, OnDestroy {
         this.profileDropdownOpen.set(false);
       }
     });
+
+    const role = (this.authService.getRole() || '').toLowerCase();
+    if (role === 'candidate') {
+      this.profileSub = this.candidateService.profile$.subscribe(profile => {
+        this.userPhotoUrl.set(profile?.profilePicture || null);
+      });
+    }
 
     // Initialize SignalR + notifications if authenticated
     if (this.authenticated) {
@@ -145,8 +159,31 @@ export class Navbar implements OnInit, OnDestroy {
     this.authenticated = this.authService.isAuthenticated();
 
     const role = (this.authService.getRole() || '').toLowerCase();
+    const recruiterRole = (this.authService.getRecruiterRole() || '').toLowerCase();
+
     if (role === 'recruiter' || role === 'admin') {
       this.profileRoute = '/recruiter/dashboard';
+      const recruiterPic = localStorage.getItem('ies_recruiter_profile_pic');
+      if (recruiterPic) {
+        this.userPhotoUrl.set(recruiterPic);
+      }
+
+      if (recruiterRole === 'admin' || role === 'admin') {
+        const companyId = this.authService.getCompanyId();
+        if (companyId) {
+          this.companyService.getCompany(companyId).subscribe({
+            next: (company) => {
+              if (company && company.logoPath) {
+                let normalizedPath = company.logoPath.replace(/^\//, '');
+                let fullLogoUrl = normalizedPath.startsWith('http') 
+                  ? normalizedPath 
+                  : `${environment.baseUrl}/${normalizedPath}`;
+                this.userPhotoUrl.set(fullLogoUrl);
+              }
+            }
+          });
+        }
+      }
     } else {
       this.profileRoute = '/candidate/profile';
     }
@@ -192,5 +229,6 @@ export class Navbar implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.navSub?.unsubscribe();
     this.signalRSub?.unsubscribe();
+    this.profileSub?.unsubscribe();
   }
 }

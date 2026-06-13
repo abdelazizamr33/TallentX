@@ -234,6 +234,7 @@
                 [email]="app.candidateEmail"
                 [imageUrl]="app.candidateImage"
                 [status]="app.status"
+                [canChangeStatus]="true"
                 dateLabel="Applied"
                 [dateValue]="app.appliedAt"
                 [score]="app.matchScore"
@@ -242,6 +243,7 @@
                 [recruiterRating]="app.recruiterRating"
                 [routerLink]="['/recruiter/candidates', app.candidateId || app.id]"
                 (rate)="onRateCandidate(app, $event)"
+                (statusChange)="onStatusChange(app, $event)"
               ></app-candidate-card>
             }
           </div>

@@ -5,6 +5,7 @@ import { CompanyService } from '../../core/services/company.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { InviteCodeDto } from '../../core/models/company.models';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-company-settings-page',
@@ -59,7 +60,7 @@ export class CompanySettingsPage implements OnInit {
     this.isLoadingCodes.set(true);
     this.companyService.getInviteCodes(companyId).subscribe({
       next: (codes) => {
-        this.inviteCodes.set(codes);
+        this.inviteCodes.set(codes || []);
         this.isLoadingCodes.set(false);
       },
       error: () => {
@@ -75,7 +76,12 @@ export class CompanySettingsPage implements OnInit {
           this.companyIndustry.set(company.industry || '');
           this.companyWebsite.set(company.website || '');
           this.companyDescription.set(company.description || '');
-          this.companyLogoUrl.set(company.logoPath || null);
+          
+          let logo = company.logoPath || null;
+          if (logo && !logo.startsWith('http')) {
+            logo = environment.baseUrl + '/' + logo.replace(/^\//, '');
+          }
+          this.companyLogoUrl.set(logo);
           
           // Fallback check: If the logged-in user is the recorded admin of the company
           const currentUserId = this.authService.getUserId();
@@ -105,22 +111,42 @@ export class CompanySettingsPage implements OnInit {
       website: finalWebsite,
       description: this.companyDescription()
     }).subscribe({
-      next: (company) => {
-        // Update signals with backend returned data to ensure sync
-        if (company) {
-          this.companyName.set(company.name || '');
-          this.companyIndustry.set(company.industry || '');
-          this.companyWebsite.set(company.website || '');
-          this.companyDescription.set(company.description || '');
+      next: (updatedCompany) => {
+        const file = this.selectedLogoFile();
+        if (file) {
+          this.companyService.updateCompanyLogo(companyId, file).subscribe({
+            next: (res) => {
+              let logoPath = res.picturePath;
+              if (logoPath && !logoPath.startsWith('http')) {
+                logoPath = environment.baseUrl + '/' + logoPath.replace(/^\//, '');
+              }
+              this.companyLogoUrl.set(logoPath);
+              this.selectedLogoFile.set(null);
+              this.finalizeSave(updatedCompany);
+            },
+            error: () => {
+              this.toast.error('Company details updated, but failed to upload logo');
+              this.isSaving.set(false);
+            }
+          });
+        } else {
+          this.finalizeSave(updatedCompany);
         }
-        this.toast.success('Company details updated successfully');
-        this.isSaving.set(false);
       },
       error: () => {
         this.toast.error('Failed to update company details');
         this.isSaving.set(false);
       }
     });
+  }
+
+  private finalizeSave(updatedCompany: any): void {
+    this.companyName.set(updatedCompany.name);
+    this.companyIndustry.set(updatedCompany.industry);
+    this.companyWebsite.set(updatedCompany.website || '');
+    this.companyDescription.set(updatedCompany.description || '');
+    this.toast.success('Company details updated successfully');
+    this.isSaving.set(false);
   }
 
   onLogoSelected(event: any): void {

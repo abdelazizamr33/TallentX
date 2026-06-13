@@ -11,5 +11,17 @@
     "changeOrigin": true,
     "ws": true,
     "logLevel": "debug"
+  },
+  "/company-logos": {
+    "target": "http://ies.runasp.net",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+  "/profile-pictures": {
+    "target": "http://ies.runasp.net",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
   }
 }

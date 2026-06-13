@@ -31,6 +31,7 @@
         <div class="mt-8 space-y-3">
           <!-- Options -->
           <label *ngFor="let option of parseOptions(q.options); let i = index" 
+                 (click)="selectOption(q.id, i)"
                  class="flex cursor-pointer items-center gap-4 rounded-2xl border-2 p-4 transition-all hover:bg-surface-container"
                  [ngClass]="answers()[q.id] === i ? 'border-primary bg-primary-container/20' : 'border-outline-variant/30'">
             <div class="flex h-6 w-6 items-center justify-center rounded-full border-2"

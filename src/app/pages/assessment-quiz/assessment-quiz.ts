@@ -155,16 +155,19 @@ export class AssessmentQuizPage implements OnInit, OnDestroy {
 
     // Convert answers dictionary to JSON string
     const answersPayload = {
-      assessmentId: ca.id,
+      assessmentId: ca.assessmentId,
       answers: JSON.stringify(this.answers())
     };
 
     this.isSubmitting.set(true);
-    this.assessmentService.submit(ca.id, answersPayload)
+    this.assessmentService.submit(ca.assessmentId, answersPayload)
       .pipe(finalize(() => this.isSubmitting.set(false)))
       .subscribe({
         next: (result) => {
-          this.toast.success(`Assessment completed! Score: ${result.score}%`);
+          const score = result.score || 0;
+          const total = ca.assessment?.totalScore || 1;
+          const percentage = Math.round((score / total) * 100);
+          this.toast.show(`Assessment completed! Score: ${percentage}%`, 'success');
           this.router.navigate(['/candidate/assessments']);
         },
         error: (err) => this.toast.error(err.error?.message || 'Failed to submit assessment.')

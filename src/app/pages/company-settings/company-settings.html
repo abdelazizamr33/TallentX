@@ -28,8 +28,9 @@
             }
           </div>
           
+          <input type="file" #fileInput class="hidden" accept="image/jpeg,image/png,image/jpg" (change)="onLogoSelected($event)" />
+          
           @if (isAdmin()) {
-            <input type="file" #fileInput class="hidden" accept="image/jpeg,image/png,image/jpg" (change)="onLogoSelected($event)" />
             <p class="mt-4 text-body-xs text-on-surface-variant text-center">
               Upload a JPG or PNG image<br>(max 5MB)
             </p>

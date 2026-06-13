@@ -62,22 +62,6 @@
 
       <!-- Sidebar -->
       <aside class="space-y-4 xl:col-span-4">
-        <!-- Skill Score Widget -->
-        <article class="rounded-2xl p-1 bg-gradient-to-r from-secondary to-primary shadow-lg">
-          <div class="rounded-xl bg-surface-container p-5">
-            <div class="mb-4 flex items-center justify-between">
-              <h3 class="text-title-md text-on-surface">Average Score</h3>
-              <i class="fa-solid fa-medal text-primary"></i>
-            </div>
-            <div class="flex items-end gap-2">
-              <span class="text-display-md font-bold text-on-surface">{{ skillScore() }}</span>
-              <span class="mb-2 text-body-sm text-on-surface-variant">%</span>
-            </div>
-            <p *ngIf="completedAssessments().length > 0" class="mt-2 text-body-sm text-success">Based on {{ completedAssessments().length }} completed assessments</p>
-            <p *ngIf="completedAssessments().length === 0" class="mt-2 text-body-sm text-on-surface-variant">Complete assessments to get a score</p>
-          </div>
-        </article>
-
         <!-- Completed Assessments -->
         <article class="rounded-2xl bg-surface-container p-5 shadow-sm border border-outline-variant/20">
           <h3 class="mb-4 text-title-md font-bold text-on-surface">Completed</h3>
@@ -87,9 +71,8 @@
                 <p class="text-label-md font-semibold text-on-surface">{{ ca.assessment?.title || 'Assessment' }}</p>
                 <p class="text-label-sm text-on-surface-variant">{{ ca.submittedAt | date:'mediumDate' }}</p>
               </div>
-              <span class="rounded px-2 py-1 text-label-sm font-bold" 
-                    [ngClass]="(ca.score || 0) >= (ca.assessment?.passingScore || 50) ? 'bg-success-container text-on-success-container' : 'bg-warning-container text-on-warning-container'">
-                {{ ca.score }}%
+              <span class="rounded px-2 py-1 text-label-sm font-bold bg-surface-container-high text-on-surface-variant">
+                Done
               </span>
             </li>
           </ul>

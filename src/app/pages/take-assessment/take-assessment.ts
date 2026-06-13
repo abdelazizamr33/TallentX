@@ -29,20 +29,6 @@ export class TakeAssessmentPage implements OnInit {
     )
   );
 
-  readonly skillScore = computed(() => {
-    const completed = this.completedAssessments();
-    if (completed.length === 0) return 0;
-    
-    const percentages = completed.map(ca => {
-      const score = ca.score || 0;
-      const total = ca.assessment?.totalScore || 1;
-      return (score / total) * 100;
-    });
-    
-    const totalPercentage = percentages.reduce((sum, current) => sum + current, 0);
-    return Math.round(totalPercentage / completed.length);
-  });
-
   ngOnInit() {
     this.loadAssessments();
   }

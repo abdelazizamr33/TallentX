@@ -164,10 +164,7 @@ export class AssessmentQuizPage implements OnInit, OnDestroy {
       .pipe(finalize(() => this.isSubmitting.set(false)))
       .subscribe({
         next: (result) => {
-          const score = result.score || 0;
-          const total = ca.assessment?.totalScore || 1;
-          const percentage = Math.round((score / total) * 100);
-          this.toast.show(`Assessment completed! Score: ${percentage}%`, 'success');
+          this.toast.show(`Assessment submitted successfully!`, 'success');
           this.router.navigate(['/candidate/assessments']);
         },
         error: (err) => this.toast.error(err.error?.message || 'Failed to submit assessment.')

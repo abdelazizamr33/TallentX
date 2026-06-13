@@ -63,14 +63,16 @@
         </a>
       }
 
-      <a
-        class="flex items-center gap-3 px-4 py-3 text-[#424754] hover:bg-[#f2f4f6] hover:text-[#191c1e] hover:translate-x-1 rounded-xl transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus:outline-none"
-        routerLinkActive="!text-white !bg-primary shadow-md hover:!text-white hover:translate-x-0"
-        routerLink="/settings"
-      >
-        <span class="material-symbols-outlined text-lg">settings</span>
-        <span class="font-['Inter'] text-sm font-medium tracking-wide uppercase">Settings</span>
-      </a>
+      @if (!isAdmin()) {
+        <a
+          class="flex items-center gap-3 px-4 py-3 text-[#424754] hover:bg-[#f2f4f6] hover:text-[#191c1e] hover:translate-x-1 rounded-xl transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus:outline-none"
+          routerLinkActive="!text-white !bg-primary shadow-md hover:!text-white hover:translate-x-0"
+          routerLink="/recruiter/settings"
+        >
+          <span class="material-symbols-outlined text-lg">settings</span>
+          <span class="font-['Inter'] text-sm font-medium tracking-wide uppercase">Settings</span>
+        </a>
+      }
     </nav>
     <div class="mt-auto pt-4 border-t border-outline-variant/20 px-2 space-y-2">
       <button

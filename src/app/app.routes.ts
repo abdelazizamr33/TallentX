@@ -146,6 +146,11 @@ export const routes: Routes = [
         path: 'company/settings',
         canActivate: [adminRecruiterGuard],
         loadComponent: () => import('./pages/company-settings/company-settings').then(m => m.CompanySettingsPage),
+      },
+      {
+        path: 'recruiter/settings',
+        canActivate: [recruiterGuard],
+        loadComponent: () => import('./pages/recruiter-settings/recruiter-settings').then(m => m.RecruiterSettingsPage),
       }
     ]
   },

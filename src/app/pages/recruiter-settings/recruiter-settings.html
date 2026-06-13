@@ -1,0 +1,81 @@
+<div class="min-h-screen rounded-4xl bg-surface-container-lowest p-6 md:p-8">
+  <div class="mx-auto max-w-6xl space-y-7">
+    <header>
+      <p class="text-label-md uppercase tracking-widest text-primary">Account Management</p>
+      <h1 class="mt-1 text-display-sm text-on-surface">Settings</h1>
+      <p class="mt-2 text-body-md text-on-surface-variant">Manage your account credentials.</p>
+    </header>
+
+    <section class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <!-- Profile Picture -->
+      <article class="rounded-3xl bg-surface-container-lowest p-6 shadow-sm border border-gray-300 flex flex-col items-center justify-start h-full">
+        <h2 class="text-title-lg text-on-surface mb-6 w-full text-left">Profile Picture</h2>
+        <div class="flex-1 flex flex-col items-center justify-center w-full">
+          <div class="relative w-32 h-32 rounded-full overflow-hidden bg-surface-container border border-gray-300 flex items-center justify-center group">
+            <ng-container *ngIf="profilePicUrl; else placeholder">
+              <img [src]="profilePicUrl" alt="Profile Picture" class="w-full h-full object-cover" />
+            </ng-container>
+            <ng-template #placeholder>
+              <span class="text-display-md text-on-surface-variant/50">
+                {{ email ? email.charAt(0).toUpperCase() : 'U' }}
+              </span>
+            </ng-template>
+            
+            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer"
+                 (click)="fileInput.click()">
+              <span class="text-white text-label-sm font-medium">Change Photo</span>
+            </div>
+          </div>
+          
+          <input type="file" #fileInput class="hidden" accept="image/jpeg,image/png,image/jpg" (change)="onProfilePicSelected($event)" />
+          
+          <p class="mt-4 text-body-xs text-on-surface-variant text-center">
+            Upload a JPG or PNG image<br>(max 5MB)
+          </p>
+        </div>
+      </article>
+
+      <!-- Account Identity -->
+      <article class="rounded-3xl bg-surface-container-lowest p-6 shadow-sm border border-gray-300 lg:col-span-2">
+        <h2 class="text-title-lg text-on-surface">Account Identity</h2>
+        <p class="mt-1 mb-6 text-body-sm text-on-surface-variant">Update your security credentials.</p>
+        
+        <div class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div class="md:col-span-2">
+            <label class="text-label-sm font-semibold text-on-surface">Email Address</label>
+            <div class="relative mt-1">
+              <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">mail</span>
+              <input type="email" [value]="email" disabled class="w-full rounded-xl bg-surface-container px-4 py-2.5 pl-11 text-body-md text-on-surface-variant outline-none cursor-not-allowed border border-transparent" />
+            </div>
+          </div>
+
+          <div class="md:col-span-2">
+            <h3 class="text-label-lg font-semibold text-on-surface mt-4 border-b border-outline-variant/20 pb-2">Change Password</h3>
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="text-label-sm font-semibold text-on-surface">Current Password</label>
+            <input type="password" [(ngModel)]="formData.currentPassword" class="mt-1 w-full rounded-xl bg-surface-container px-4 py-2.5 text-on-surface outline-none ring-1 ring-outline-variant/40 transition-shadow focus:ring-2 focus:ring-primary" />
+          </div>
+          
+          <div>
+            <label class="text-label-sm font-semibold text-on-surface">New Password</label>
+            <input type="password" [(ngModel)]="formData.newPassword" class="mt-1 w-full rounded-xl bg-surface-container px-4 py-2.5 text-on-surface outline-none ring-1 ring-outline-variant/40 transition-shadow focus:ring-2 focus:ring-primary" />
+          </div>
+          
+          <div>
+            <label class="text-label-sm font-semibold text-on-surface">Confirm New Password</label>
+            <input type="password" [(ngModel)]="formData.confirmPassword" class="mt-1 w-full rounded-xl bg-surface-container px-4 py-2.5 text-on-surface outline-none ring-1 ring-outline-variant/40 transition-shadow focus:ring-2 focus:ring-primary" />
+          </div>
+        </div>
+        
+        <div class="mt-6 flex justify-end pt-4">
+          <button (click)="saveChanges()" [disabled]="isSaving" class="rounded-lg bg-primary px-6 py-2.5 text-label-md font-medium text-on-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center">
+            <span *ngIf="!isSaving">Change Password</span>
+            <span *ngIf="isSaving" class="flex items-center"><span class="material-symbols-outlined animate-spin mr-2">progress_activity</span>Updating...</span>
+          </button>
+        </div>
+      </article>
+    </section>
+  </div>
+</div>
